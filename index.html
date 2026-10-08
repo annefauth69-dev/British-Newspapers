@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>British Newspapers Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Libre+Franklin:wght@400;500;600;700;800&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=UnifrakturMaguntia&display=swap">
+<style>
+/* Layout: one centred column. The quiz is the "newsroom desk"; the mock front pages sit on it as paper objects. */
+:root {
+  --paper: #F1F1EE;
+  --surface: #FFFFFF;
+  --ink: #17171A;
+  --muted: #5C5C63;
+  --rule: #D2D2CC;
+  --red: #CF1018;
+  --navy: #1C2E4E;
+  --ok: #1E7A48;
+  --ok-bg: #E2F2E8;
+  --bad: #B42318;
+  --bad-bg: #FBE8E5;
+  --focus: #2459C9;
+  /* printed objects keep their print colours in both themes */
+  --print-red: #CF1018;
+  --puff: #FFD400;
+  --fp-paper: #FBFBF8;
+  --fp-ink: #141414;
+  --fp-muted: #505056;
+
+  --f-tab: "Anton", Impact, "Arial Narrow", sans-serif;
+  --f-qual: "Old Standard TT", Georgia, "Times New Roman", serif;
+  --f-black: "UnifrakturMaguntia", "Old English Text MT", Georgia, serif;
+  --f-ui: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121214; --surface: #1C1C20; --ink: #EDEDEF; --muted: #A4A4AC; --rule: #34343B;
+    --red: #F2454B; --navy: #A9C1EB; --ok: #4CC58A; --ok-bg: #12301F; --bad: #FF7D6E; --bad-bg: #3B1714;
+    --focus: #7EA6FF; --fp-paper: #E7E6E1; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121214; --surface: #1C1C20; --ink: #EDEDEF; --muted: #A4A4AC; --rule: #34343B;
+  --red: #F2454B; --navy: #A9C1EB; --ok: #4CC58A; --ok-bg: #12301F; --bad: #FF7D6E; --bad-bg: #3B1714;
+  --focus: #7EA6FF; --fp-paper: #E7E6E1; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--f-ui); font-size: 16px; line-height: 1.5;
+  padding-inline: 16px; padding-block: 0;
+}
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 24px 56px; display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* ---------- masthead of the app ---------- */
+.mast { display: flex; flex-direction: column; gap: 10px; padding-bottom: 14px; border-bottom: 4px solid var(--ink); position: relative; }
+.mast::after { content: ""; position: absolute; left: 0; right: 0; bottom: -9px; border-bottom: 1px solid var(--ink); }
+.kicker { font-size: .74rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.mast h1 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; font-weight: 400; }
+.h-tab { font-family: var(--f-tab); text-transform: uppercase; background: var(--print-red); color: #fff; padding: 2px 12px 0; font-size: clamp(2.6rem, 11vw, 4.4rem); line-height: 1.05; transform: rotate(-1.5deg); }
+.h-or { font-family: var(--f-ui); font-size: 1rem; color: var(--muted); font-weight: 600; }
+.h-qual { font-family: var(--f-qual); font-style: italic; font-size: clamp(2.4rem, 10vw, 4rem); line-height: 1.05; color: var(--navy); }
+.tagline { max-width: 60ch; color: var(--muted); }
+.mast.compact { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 10px; }
+.mast.compact h1 .h-tab { font-size: 1.5rem; transform: none; padding: 1px 8px 0; }
+.mast.compact h1 .h-qual { font-size: 1.6rem; }
+.mast.compact h1 .h-or { font-size: .8rem; }
+
+/* ---------- generic ---------- */
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.label { font-size: .74rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.btn { border: 2px solid var(--ink); background: transparent; border-radius: 4px; padding: 11px 18px; font-weight: 700; cursor: pointer; }
+.btn.primary { background: var(--ink); color: var(--paper); }
+.btn:hover { transform: translateY(-1px); }
+.btn.link { border: 0; padding: 6px 0; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; color: var(--muted); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.muted { color: var(--muted); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field input { font: inherit; padding: 10px 12px; border: 2px solid var(--rule); border-radius: 4px; background: var(--paper); color: var(--ink); max-width: 360px; width: 100%; }
+.field input:focus { border-color: var(--ink); outline: none; }
+
+/* ---------- menu ---------- */
+.rounds { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.rounds li { border-top: 1px solid var(--rule); }
+.rounds li:last-child { border-bottom: 1px solid var(--rule); }
+.round-btn { display: grid; grid-template-columns: 3.2rem 1fr auto; gap: 4px 12px; align-items: baseline; width: 100%; text-align: left; background: none; border: 0; padding: 14px 4px; cursor: pointer; }
+.round-btn:hover { background: var(--paper); }
+.round-btn .no { font-family: var(--f-tab); font-size: 1.6rem; color: var(--red); line-height: 1; }
+.round-btn .t { font-weight: 700; font-size: 1.05rem; }
+.round-btn .d { grid-column: 2; color: var(--muted); font-size: .92rem; }
+.round-btn .n { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.note { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; font-size: .94rem; }
+.note .tag { font-family: var(--f-tab); text-transform: uppercase; background: var(--puff); color: #111; padding: 2px 8px; font-size: .9rem; letter-spacing: .02em; }
+
+/* ---------- quiz ---------- */
+.qbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; font-size: .9rem; }
+.qbar .where { font-weight: 700; }
+.score { font-variant-numeric: tabular-nums; font-weight: 700; }
+.prog { height: 6px; background: var(--rule); border-radius: 3px; overflow: hidden; }
+.prog > div { height: 100%; background: var(--red); transition: width .3s ease; }
+.stmt { font-size: clamp(1.15rem, 3.6vw, 1.45rem); font-weight: 600; line-height: 1.35; }
+.stmt.quote::before { content: "\201C"; } .stmt.quote::after { content: "\201D"; }
+.src { font-size: .85rem; color: var(--muted); }
+.opts { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.opts.list { grid-template-columns: 1fr; }
+.opt { display: flex; gap: 12px; align-items: center; text-align: left; border: 2px solid var(--rule); background: var(--surface); border-radius: 6px; padding: 13px 14px; cursor: pointer; font-weight: 600; min-width: 0; }
+.opt:hover:not(:disabled) { border-color: var(--ink); }
+.opt .key { flex: none; width: 1.7rem; height: 1.7rem; border-radius: 50%; border: 1.5px solid var(--muted); display: grid; place-items: center; font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.opt:disabled { cursor: default; }
+.opt.is-correct { border-color: var(--ok); background: var(--ok-bg); }
+.opt.is-correct .key { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.opt.is-wrong { border-color: var(--bad); background: var(--bad-bg); }
+.opt.is-wrong .key { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+.opt.is-dim { opacity: .55; }
+.fb { border-radius: 6px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.fb.ok { background: var(--ok-bg); }
+.fb.bad { background: var(--bad-bg); }
+.fb-tag { font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: .8rem; }
+.fb.ok .fb-tag { color: var(--ok); } .fb.bad .fb-tag { color: var(--bad); }
+.hint { font-size: .85rem; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) {
+  .fb { animation: drop .25s ease-out; }
+  @keyframes drop { from { transform: translateY(-4px); opacity: .4; } to { transform: none; opacity: 1; } }
+}
+
+/* ---------- intro of a round ---------- */
+.intro-no { font-family: var(--f-tab); font-size: 4.5rem; line-height: .9; color: var(--red); }
+.intro h2 { font-family: var(--f-qual); font-size: clamp(1.7rem, 6vw, 2.4rem); font-weight: 700; }
+.prev { font-size: .95rem; padding: 10px 14px; background: var(--paper); border-radius: 4px; font-variant-numeric: tabular-nums; }
+
+/* ---------- mock front pages ---------- */
+.fp { background: var(--fp-paper); color: var(--fp-ink); padding: 14px; width: 100%; max-width: 520px; margin: 0 auto; box-shadow: 0 1px 2px rgba(0,0,0,.12), 0 10px 28px rgba(0,0,0,.14); display: flex; flex-direction: column; gap: 6px; font-family: var(--f-ui); }
+.fp-label { text-align: center; }
+.fp .part { border-radius: 2px; outline: 2px dashed transparent; outline-offset: 2px; }
+.fp.live .part { cursor: pointer; outline-color: rgba(20,20,20,.22); }
+.fp.live .part:hover, .fp.live .part:focus-visible { outline: 3px solid #2459C9; }
+.fp .part.hit-ok { outline: 4px solid #1E7A48; }
+.fp .part.hit-bad { outline: 4px solid #B42318; }
+.fp svg { display: block; width: 100%; height: auto; }
+.tab-top { display: flex; gap: 10px; align-items: stretch; }
+.tab-mast { flex: 1; background: var(--print-red); color: #fff; font-family: var(--f-tab); text-transform: uppercase; font-size: clamp(2rem, 9vw, 3.3rem); line-height: .92; padding: 8px 12px 6px; }
+.tab-mast small { display: block; font-size: .32em; letter-spacing: .1em; }
+.tab-puff { width: 32%; background: var(--puff); color: #111; font-family: var(--f-tab); text-transform: uppercase; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: clamp(.75rem, 3vw, 1rem); line-height: 1.05; padding: 6px; transform: rotate(-3deg); }
+.tab-puff b { font-size: 1.9em; color: var(--print-red); font-weight: 400; }
+.tab-folio { font-size: .7rem; font-weight: 800; text-transform: uppercase; border-bottom: 3px solid #141414; padding: 3px 0; }
+.tab-head { font-family: var(--f-tab); font-weight: 400; text-transform: uppercase; font-size: clamp(2.7rem, 14vw, 4.8rem); line-height: .9; }
+.tab-sub { align-self: flex-start; font-family: var(--f-tab); text-transform: uppercase; background: #141414; color: #fff; padding: 3px 8px 1px; font-size: clamp(1rem, 4.6vw, 1.4rem); }
+.tab-cap { font-size: .8rem; font-weight: 700; }
+.tab-cap b, .tab-by { color: var(--print-red); }
+.tab-by { font-weight: 800; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; align-self: flex-start; }
+.tab-lead { font-size: .95rem; font-weight: 700; line-height: 1.3; }
+.q-mast { font-family: var(--f-black); font-size: clamp(2.1rem, 9vw, 3.2rem); text-align: center; line-height: 1.1; }
+.q-folio { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2px 12px; border-top: 1px solid #141414; border-bottom: 3px double #141414; font-family: var(--f-qual); font-size: .74rem; padding: 3px 0; }
+.q-head { font-family: var(--f-qual); font-weight: 700; font-size: clamp(1.25rem, 4.6vw, 1.75rem); line-height: 1.15; margin-top: 4px; }
+.q-stand { font-family: var(--f-qual); font-style: italic; font-size: 1rem; line-height: 1.3; }
+.q-by { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--fp-muted); align-self: flex-start; }
+.q-by b { color: #141414; }
+.q-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid #141414; padding-top: 8px; }
+.q-grid > div { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.q-lead, .q-more { font-family: var(--f-qual); font-size: .86rem; line-height: 1.4; }
+.q-lead::first-letter { font-size: 2.6em; float: left; line-height: .85; padding: 2px 4px 0 0; font-weight: 700; }
+.q-cap { font-family: var(--f-qual); font-size: .74rem; line-height: 1.3; color: var(--fp-muted); }
+.q-index { display: flex; flex-wrap: wrap; gap: 4px 14px; border-top: 1px solid #141414; padding-top: 5px; font-size: .72rem; font-weight: 600; }
+.q-index span { text-transform: uppercase; letter-spacing: .08em; }
+@media (max-width: 460px) { .q-grid { grid-template-columns: 1fr; } }
+
+/* ---------- results ---------- */
+.res-front { background: var(--fp-paper); color: var(--fp-ink); padding: 18px; box-shadow: 0 10px 28px rgba(0,0,0,.14); display: flex; flex-direction: column; gap: 10px; }
+.res-front .tab-head { font-size: clamp(2.2rem, 10vw, 3.6rem); }
+.res-front .q-stand { font-size: 1.1rem; }
+.res-rows { display: flex; flex-direction: column; gap: 10px; }
+.res-row { display: grid; grid-template-columns: minmax(0, 1fr) 4.5rem; gap: 4px 12px; align-items: center; }
+.res-row .bar { grid-column: 1 / -1; height: 8px; background: var(--rule); border-radius: 4px; overflow: hidden; }
+.res-row .bar > div { height: 100%; background: var(--navy); }
+.res-row .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.mistakes { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.mistakes li { border-top: 1px solid var(--rule); padding-top: 10px; display: flex; flex-direction: column; gap: 2px; font-size: .93rem; }
+.mistakes .yours { color: var(--bad); }
+.mistakes .right { color: var(--ok); font-weight: 600; }
+
+/* ---------- bonus ---------- */
+.facts { list-style: square; margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 4px; }
+.preview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.mini { background: var(--fp-paper); color: var(--fp-ink); padding: 12px; box-shadow: 0 6px 18px rgba(0,0,0,.12); display: flex; flex-direction: column; gap: 6px; min-height: 180px; min-width: 0; }
+.mini .tab-mast { flex: none; font-size: 1.6rem; }
+.mini .tab-head { font-size: clamp(1.8rem, 7vw, 2.4rem); overflow-wrap: anywhere; }
+.mini .q-mast { font-size: 1.9rem; }
+.mini .q-head { font-size: 1.25rem; overflow-wrap: anywhere; }
+.mini .empty { color: var(--fp-muted); font-style: italic; font-family: var(--f-ui); font-size: .9rem; text-transform: none; font-weight: 400; }
+.check { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.check ul { margin: 6px 0 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 3px; font-size: .93rem; }
+.sample { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ================= content ================= */
+  var T = "Tabloid press", Q = "Quality press";
+
+  var ROUNDS = [
+    { id: 1, title: "Tabloid or quality?", intro: "Each card describes one typical feature. Decide: is it the tabloid press or the quality press?" },
+    { id: 2, title: "Who’s who on the newsstand", intro: "Red tops, middle market or quality press? Sort Britain’s national daily papers and check the key terms." },
+    { id: 3, title: "Anatomy of a front page", intro: "Two front pages, one story. Tap the part of the page the question asks for." },
+    { id: 4, title: "Headline check", intro: "Same stories, different papers. Is each headline from a tabloid or from a quality paper?" },
+    { id: 5, title: "Style detective", intro: "Look closely at the language. Which features give the style away?" }
+  ];
+
+  var QS = [];
+  function bin(r, n, text, tab, explain, opts) {
+    QS.push(Object.assign({ id: "r" + r + "-" + n, r: r, kind: "choice", fixed: true,
+      prompt: r === 4 ? "Where would you read this headline?" : "Which kind of newspaper does this describe?",
+      text: text, quote: r === 4, options: [T, Q], answer: tab ? 0 : 1, explain: explain }, opts || {}));
+  }
+  function mc(r, n, prompt, text, options, explain, opts) {
+    QS.push(Object.assign({ id: "r" + r + "-" + n, r: r, kind: "choice", prompt: prompt, text: text,
+      options: options, answer: 0, explain: explain }, opts || {}));
+  }
+  function spot(n, page, part, prompt, explain) {
+    QS.push({ id: "r3-" + n, r: 3, kind: "spot", page: page, part: part, prompt: prompt, explain: explain });
+  }
+
+  /* Round 1: characteristics (Task 1) */
+  bin(1, 1, "Smaller format: approx. 30 × 40 cm", true, "Size: tabloids are the smaller format (approx. 30 × 40 cm). They are easy to read on the bus or train.");
+  bin(1, 2, "Larger format: approx. 40 × 60 cm", false, "Size: the traditional broadsheet is approx. 40 × 60 cm. That’s why quality papers used to be called “broadsheets”.");
+  bin(1, 3, "Focus on celebrity gossip, sensational crime and human-interest stories", true, "Content: tabloids focus on sensation, celebrities and human interest. Politics is covered too, but briefly.");
+  bin(1, 4, "In-depth reporting and analysis of politics, business and international events", false, "Content: quality papers cover serious national and international news, often with investigative journalism and comment.");
+  bin(1, 5, "Eye-catching, emotive headlines, often with exclamation marks", true, "Headline: tabloid headlines want to grab attention and stir up emotions.");
+  bin(1, 6, "Factual, straightforward headlines", false, "Headline: quality papers say what happened, in a neutral way.");
+  bin(1, 7, "Lots of big pictures, bold headlines and short articles", true, "Layout: tabloids have a cluttered, eye-catching layout with lots of images.");
+  bin(1, 8, "A clean layout with long articles, fewer pictures and up to six columns per page", false, "Layout: quality papers have a clean, straightforward layout, so readers get a lot of information in one go.");
+  bin(1, 9, "Informal, conversational style with slang and short, simple sentences", true, "Language: tabloids use colloquial language, slang and simple sentences.");
+  bin(1, 10, "A formal and objective tone with longer sentences and paragraphs", false, "Language: quality papers write formally and objectively.");
+  bin(1, 11, "Aimed at a wide, general audience; cheap and quick to read", true, "Target audience: tabloids are aimed at a wide, general readership and cost less.");
+  bin(1, 12, "Aimed at a more educated and affluent readership", false, "Target audience: quality papers are aimed at a more educated and affluent readership and are seen as more credible.");
+
+  /* Round 2: the British newspaper landscape */
+  var LAND = ["Red top", "Middle market", "Quality press"];
+  function paper(n, name, idx, explain) {
+    QS.push({ id: "r2-" + n, r: 2, kind: "choice", fixed: true, prompt: "Which group does this national daily belong to?",
+      text: name, options: LAND, answer: idx, explain: explain });
+  }
+  paper(1, "The Sun", 0, "The Sun is Britain’s best-known red top: red masthead, celebrity stories, big pictures, short texts.");
+  paper(2, "Daily Mirror", 0, "The Daily Mirror is a red top. Its masthead is red, just like The Sun’s and the Daily Star’s.");
+  paper(3, "Daily Star", 0, "The Daily Star is a red top with a strong focus on celebrities, entertainment and sensational stories.");
+  paper(4, "Daily Mail", 1, "The Daily Mail is a middle-market paper: tabloid size, but its readers are between the red tops and the quality papers.");
+  paper(5, "Daily Express", 1, "The Daily Express is a middle-market paper, like the Daily Mail.");
+  paper(6, "The Times", 2, "The Times is a quality paper. Since 2004 it has been printed in the smaller compact format, but its content and style are still quality press.");
+  paper(7, "The Guardian", 2, "The Guardian is a quality paper. Since 2018 it has been printed in tabloid size, but it is still quality press.");
+  paper(8, "The Daily Telegraph", 2, "The Daily Telegraph is a quality paper and is still printed as a real broadsheet.");
+  paper(9, "Financial Times", 2, "The Financial Times is a quality paper specialising in business and finance. It is famous for its salmon-pink paper.");
+  mc(2, 10, "Why are The Sun, the Daily Mirror and the Daily Star called “red tops”?", "",
+    ["Their mastheads (the title at the top of the front page) are red.", "They are printed on red paper.", "They all support the same political party.", "They mainly report bad news."],
+    "They are called red tops because of their red mastheads.", { list: true });
+  mc(2, 11, "What is the masthead of a newspaper?", "",
+    ["The large title at the top of the front page that shows the paper’s name", "The most important headline of the day", "The name of the journalist who wrote an article", "The editor-in-chief of the paper"],
+    "The masthead is the paper’s name in large letters at the top of the front page.", { list: true });
+  mc(2, 12, "What does the term “middle market” describe?", "",
+    ["Papers whose target readership is between the red tops and the quality papers", "Papers that are sold only in the Midlands", "Papers with a medium-sized format between tabloid and broadsheet", "Papers that report mainly on business and markets"],
+    "“Middle market” refers to the target readership of papers like the Daily Mail and the Daily Express: somewhere between the red tops and the broadsheets.", { list: true });
+  mc(2, 13, "Today, The Times and The Guardian are printed in a small format. So why are they still quality papers?", "",
+    ["Because of their content, language and target audience, not their size", "Because they are more expensive than tabloids", "Because they have no pictures at all", "They aren’t: since they changed format, they count as red tops."],
+    "Today the size alone doesn’t tell you much. What matters is content, language, layout and target audience.", { list: true });
+
+  /* Round 3: anatomy of a front page */
+  spot(1, "tab", "masthead", "Tap the masthead.", "The masthead is the paper’s name in large letters at the top of the front page. Red tops have a red one, which is where their name comes from.");
+  spot(2, "tab", "puff", "Tap the puff (teaser): the box that advertises something inside the paper.", "A puff advertises free gifts, competitions or special pages inside. Tabloids use puffs to make people buy the paper.");
+  spot(3, "tab", "headline", "Tap the headline.", "The tabloid headline is huge, short and emotive: “TWISTER TERROR!” It often takes up half of the front page.");
+  spot(4, "tab", "caption", "Tap the caption: the text that belongs to the photo.", "The caption explains the photo. Tabloid captions often start with a dramatic word in capitals, like “WRECKED:”.");
+  spot(5, "qual", "folio", "Tap the line that shows the date, issue number and price.", "This line under the masthead is called the folio line. It shows the date, the issue number and the price.");
+  spot(6, "qual", "standfirst", "Tap the standfirst: the short summary under the headline.", "The standfirst (or subheading) sums up the story in one sentence. Quality papers use it to give the key facts straight away.");
+  spot(7, "qual", "byline", "Tap the byline: the line that tells you who wrote the article.", "The byline names the journalist. In quality papers it often includes their job, e.g. “Environment Correspondent”.");
+  spot(8, "qual", "lead", "Tap the lead paragraph: the first paragraph, which answers who, what, where and when.", "The lead packs in the key facts: 140 mph, 40 homes, more than 200 residents, Ashbury, Wednesday evening. It also names a source: the Environment Agency.");
+  spot(9, "qual", "index", "Tap the index: the box that tells you where to find other sections.", "The index (contents box) lists the sections inside the paper, such as Business, Comment and Sport.");
+
+  /* Round 4: headlines (Task 2) */
+  bin(4, 1, "Politician caught in steamy love affair! Shocking details inside!", true, "Tabloid: a private scandal, emotive words (“steamy”, “shocking”), exclamation marks and a teaser that makes you buy the paper.");
+  bin(4, 2, "Politician implicated in ethical breach following investigation", false, "Quality press: neutral, formal words (“implicated”, “ethical breach”), it refers to an investigation and has no exclamation mark.");
+  bin(4, 3, "Hollywood’s hottest couple ties the knot in star-studded ceremony", true, "Tabloid: celebrity news, a superlative (“hottest”) and the informal idiom “tie the knot”.");
+  bin(4, 4, "Prominent figures in entertainment industry exchange vows in private ceremony", false, "Quality press: sober, formal wording (“prominent figures”, “exchange vows”) with no hype.");
+  bin(4, 5, "Terrifying twister tears through town! Miraculous survivors tell all!", true, "Tabloid: alliteration (“twister tears through town”), emotive words and exclamation marks.");
+  bin(4, 6, "Severe tornado causes widespread damage and displacement in affected community", false, "Quality press: factual and complete, with neutral vocabulary (“severe”, “widespread damage”, “displacement”).");
+  bin(4, 7, "Deadly outbreak spreads fear! How to protect yourself and your loved ones", true, "Tabloid: it plays on fear and addresses the reader directly (“yourself”, “your loved ones”).");
+  bin(4, 8, "Health officials confirm widespread outbreak, measures being taken to contain spread", false, "Quality press: it names a source (health officials) and reports facts calmly.");
+  bin(4, 9, "PRICE PAIN! Families fork out a fortune at the tills", true, "Tabloid: capital letters, rhyme and alliteration (“PRICE PAIN”, “fork out a fortune”) and the colloquial phrase “fork out”.");
+  bin(4, 10, "Inflation rises to 4.1% as food prices continue to climb", false, "Quality press: an exact figure, neutral words and a clear explanation of what happened.");
+
+  /* Round 5: style detective */
+  mc(5, 1, "This headline is from a red top (The Scottish Sun). What makes it typical of a tabloid?", "BATTLE OF THE TAXES",
+    ["It’s a pun: it plays on the phrase “battle of the sexes”.", "It gives exact facts and figures.", "It names the source of the information.", "It uses formal, neutral vocabulary."],
+    "Wordplay and puns are typical of tabloid headlines. The article is about the “pink tax” that women pay, so “taxes” replaces “sexes”.", { quote: true, list: true });
+  mc(5, 2, "Which feature of tabloid language do you find in this sentence?", "Female shoppers are forced to fork out hundreds of pounds more every year than blokes.",
+    ["Colloquial words like “fork out” and “blokes”", "Technical terms from economics", "Long sentences with many clauses", "Exact statistics from a study"],
+    "“To fork out” (= to pay a lot, unwillingly) and “blokes” (= men) are colloquial. Tabloids write the way people talk.", { quote: true, list: true, src: "The Scottish Sun" });
+  mc(5, 3, "This sentence is from a quality paper (The Independent). What makes it typical of the quality press?", "Lotion for women cost an average of $2.97 per ounce compared to $1.86 for men.",
+    ["Exact facts and figures taken from research", "Emotive words that make the reader angry", "Wordplay and alliteration", "Short, simple words for a wide audience"],
+    "Quality papers back up their claims with exact facts and figures, often from studies or experts.", { quote: true, list: true });
+  mc(5, 4, "Which stylistic device does this tabloid headline use?", "Twister tears through town!",
+    ["Alliteration: several words begin with the same sound", "A rhetorical question", "A quotation from an expert", "Irony"],
+    "Twister, tears, through, town: the repeated “t” makes the headline catchy. Alliteration is a typical tabloid device.", { quote: true, list: true });
+  mc(5, 5, "What is the main purpose of “Shocking details inside!” on a tabloid front page?", "",
+    ["To make readers curious so that they buy the paper", "To give the reader the most important facts", "To warn readers that the article is disturbing", "To show that the information has been checked"],
+    "Teasers like this create curiosity. Tabloids depend on selling as many copies as possible.", { list: true });
+  mc(5, 6, "Which sentence is written in quality-press style?", "",
+    ["The MP criticised the pricing as unfair and called for new legislation.", "MP slams ‘disgusting’ rip-off!", "Shoppers left fuming as greedy firms cash in!", "Fury over pink price scandal!"],
+    "Neutral verbs (“criticised”, “called for”) and formal vocabulary (“legislation”) are typical of the quality press. The other sentences use emotive words like “slams”, “rip-off” and “fury”.", { list: true });
+  mc(5, 7, "Which sentence is written in tabloid style?", "",
+    ["Energy bosses in the dock as bill fury explodes!", "Ministers announced a review of energy prices on Tuesday.", "The regulator has published its annual report on household bills.", "Energy prices are expected to fall slightly next spring, analysts say."],
+    "“Bosses”, “in the dock”, “fury explodes” and the exclamation mark make this sentence emotive and dramatic: tabloid style.", { list: true });
+  mc(5, 8, "Which words make this tabloid sentence emotive?", "CAMPAIGNERS are fighting to axe a ‘pink tax’ that hammers women at the tills.",
+    ["“axe” and “hammers”", "“campaigners” and “women”", "“are” and “that”", "“pink” and “tills”"],
+    "“To axe” (= to get rid of) and “to hammer” (= to hit hard) are violent, colloquial metaphors. Tabloids use them to make a story dramatic.", { quote: true, list: true, src: "The Scottish Sun" });
+
+  var PART_NAMES = { masthead: "Masthead", puff: "Puff (teaser)", folio: "Folio line (date, issue, price)", headline: "Headline",
+    subhead: "Subheadline", photo: "Photo", caption: "Caption", byline: "Byline", lead: "Lead paragraph",
+    standfirst: "Standfirst", index: "Index", more: "Body text" };
+
+  var STORM = '<svg viewBox="0 0 300 150" role="img" aria-label="Photo: a tornado over a damaged house">' +
+    '<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E3440"/><stop offset="1" stop-color="#7B8494"/></linearGradient></defs>' +
+    '<rect width="300" height="150" fill="url(#sky)"/>' +
+    '<path d="M150 0 C 205 0 215 18 190 34 C 176 46 178 60 168 74 C 160 88 162 100 156 118 L 150 120 C 152 100 146 90 142 76 C 132 60 120 46 112 32 C 96 14 110 0 150 0 Z" fill="#4A5160" opacity=".9"/>' +
+    '<rect y="118" width="300" height="32" fill="#4F5A3A"/>' +
+    '<path d="M40 118 L40 92 L70 72 L100 92 L100 118 Z" fill="#C9C2B4"/>' +
+    '<path d="M36 94 L70 70 L88 82 L80 70 L96 64 L104 92" fill="none" stroke="#5A3A2A" stroke-width="4"/>' +
+    '<rect x="58" y="100" width="12" height="18" fill="#3B2E28"/>' +
+    '<path d="M200 118 l8 -6 l6 4 l9 -8 l5 10 Z M230 118 l6 -10 l12 3 l4 7 Z" fill="#6B5A4A"/>' +
+    '</svg>';
+
+  function frontPage(page) {
+    if (page === "tab") {
+      return '<div class="fp" data-page="tab">' +
+        '<div class="tab-top">' +
+          '<div class="part tab-mast" data-part="masthead"><small>The</small>Daily Blast</div>' +
+          '<div class="part tab-puff" data-part="puff"><b>Free</b>24-page TV guide inside</div>' +
+        '</div>' +
+        '<div class="part tab-folio" data-part="folio">Thursday, October 8, 2026 · 60p</div>' +
+        '<h3 class="part tab-head" data-part="headline">Twister terror!</h3>' +
+        '<div class="part tab-sub" data-part="subhead">Miraculous survivors tell all</div>' +
+        '<div class="part" data-part="photo">' + STORM + '</div>' +
+        '<div class="part tab-cap" data-part="caption"><b>WRECKED:</b> Gran Mavis’s bungalow in Ashbury</div>' +
+        '<div class="part tab-by" data-part="byline">By Jack Holloway</div>' +
+        '<p class="part tab-lead" data-part="lead">A MONSTER twister ripped through a sleepy village last night and left terrified families with NOTHING. Full story: Pages 4, 5 &amp; 6</p>' +
+      '</div>';
+    }
+    return '<div class="fp" data-page="qual">' +
+      '<div class="part q-mast" data-part="masthead">The Chronicle</div>' +
+      '<div class="part q-folio" data-part="folio"><span>Thursday 8 October 2026</span><span>No. 61,204</span><span>£3.20</span></div>' +
+      '<h3 class="part q-head" data-part="headline">Severe tornado causes widespread damage and displacement in affected community</h3>' +
+      '<p class="part q-stand" data-part="standfirst">Forty homes destroyed in Ashbury as officials begin to assess the cost of rebuilding</p>' +
+      '<div class="part q-by" data-part="byline"><b>Eleanor Whitcombe</b> Environment Correspondent</div>' +
+      '<div class="q-grid">' +
+        '<div><p class="part q-lead" data-part="lead">A tornado with wind speeds of up to 140 mph struck the village of Ashbury, Lincolnshire, on Wednesday evening, destroying 40 homes and forcing more than 200 residents to leave the area, the Environment Agency said.</p>' +
+        '<p class="part q-more" data-part="more">Meteorologists said the storm was the strongest recorded in the county since 1981. Local authorities have opened two emergency shelters. <i>Continued on page 4</i></p></div>' +
+        '<div><div class="part" data-part="photo">' + STORM + '</div>' +
+        '<p class="part q-cap" data-part="caption">Emergency crews clear debris in Ashbury on Wednesday night. Photograph: Daniel Price</p></div>' +
+      '</div>' +
+      '<div class="part q-index" data-part="index"><span>Inside</span> Business 28 · Comment 32 · Puzzles 44 · Sport 48</div>' +
+    '</div>';
+  }
+
+  /* ================= state ================= */
+  var byId = {};
+  QS.forEach(function (q) { byId[q.id] = q; });
+
+  var state = { screen: "menu", name: "", queue: [], pos: 0, picks: {}, order: {}, leave: false, bonus: { tab: "", qual: "", shown: false }, from: "menu" };
+
+  function shuffle(a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function roundQs(r) { return QS.filter(function (q) { return q.r === r; }); }
+  function prepOrder(ids) {
+    ids.forEach(function (id) {
+      var q = byId[id];
+      if (q.kind === "choice" && !q.fixed) state.order[id] = shuffle(q.options.map(function (_, i) { return i; }));
+    });
+  }
+  function startRounds(rs) {
+    var queue = [];
+    rs.forEach(function (r) {
+      queue.push("intro:" + r);
+      var ids = roundQs(r).map(function (q) { return q.id; });
+      if (r === 3) {
+        // keep the two front pages in blocks so students can study each page
+        ids = shuffle(ids.filter(function (id) { return byId[id].page === "tab"; })).concat(shuffle(ids.filter(function (id) { return byId[id].page === "qual"; })));
+      } else ids = shuffle(ids);
+      queue = queue.concat(ids);
+    });
+    state.queue = queue; state.pos = 0; state.picks = {}; state.order = {}; state.leave = false;
+    prepOrder(queue.filter(function (x) { return x.indexOf("intro:") !== 0; }));
+    state.screen = "quiz"; render();
+  }
+  function retryWrong() {
+    var wrong = qIds().filter(function (id) { return state.picks[id] && !state.picks[id].ok; });
+    if (!wrong.length) return;
+    state.queue = ["intro:retry"].concat(shuffle(wrong));
+    state.pos = 0; state.picks = {}; state.order = {}; state.leave = false;
+    prepOrder(wrong);
+    state.screen = "quiz"; render();
+  }
+  function qIds() { return state.queue.filter(function (x) { return x.indexOf("intro:") !== 0; }); }
+  function scoreOf(ids) {
+    var s = 0; ids.forEach(function (id) { if (state.picks[id] && state.picks[id].ok) s++; }); return s;
+  }
+
+  /* ================= rendering ================= */
+  var app = document.getElementById("app");
+
+  function header(compact) {
+    return '<header class="mast' + (compact ? " compact" : "") + '">' +
+      (compact ? "" : '<div class="kicker">English · Year 11 · British Newspapers</div>') +
+      '<h1><span class="h-tab">Tabloid</span><span class="h-or">or</span><span class="h-qual">Quality?</span></h1>' +
+      (compact ? quizBar() : '<p class="tagline">An interactive quiz on how British newspapers are built and how the tabloid press differs from the quality press.</p>') +
+      '</header>';
+  }
+  function quizBar() {
+    if (state.screen !== "quiz") return '<button class="btn link" data-action="menu">Back to menu</button>';
+    return '<button class="btn link" data-action="leave">' + (state.leave ? "Leave quiz? Tap again" : "Back to menu") + '</button>';
+  }
+
+  function renderMenu() {
+    var total = QS.length;
+    var items = ROUNDS.map(function (r) {
+      return '<li><button class="round-btn" data-action="round" data-r="' + r.id + '">' +
+        '<span class="no">' + r.id + '</span><span class="t">' + esc(r.title) + '</span>' +
+        '<span class="n">' + roundQs(r.id).length + ' questions</span>' +
+        '<span class="d">' + esc(r.intro) + '</span></button></li>';
+    }).join("") +
+      '<li><button class="round-btn" data-action="bonus"><span class="no">+</span><span class="t">Bonus: write your own headlines</span>' +
+      '<span class="n">no points</span><span class="d">Turn one story into a tabloid headline and a quality-press headline.</span></button></li>';
+
+    app.innerHTML = header(false) +
+      '<section class="card">' +
+        '<div class="field"><label class="label" for="name">Your name (optional, shown on your results)</label>' +
+        '<input id="name" type="text" autocomplete="given-name" maxlength="30" value="' + esc(state.name) + '"></div>' +
+        '<div class="actions"><button class="btn primary" data-action="all">Start the full quiz (' + total + ' questions)</button>' +
+        '<span class="muted">about 15–20 minutes</span></div>' +
+      '</section>' +
+      '<section class="card"><h2 class="label">Or play one round</h2><ul class="rounds">' + items + '</ul></section>' +
+      '<section class="note"><span class="tag">Good to know</span><p>In German you often hear <b>“Yellow Press”</b> or <i>Boulevardpresse</i>. In Britain, people say <b>tabloids</b>, <b>the popular press</b> or <b>red tops</b>. The opposite is the <b>quality press</b>, traditionally called <b>broadsheets</b>.</p></section>';
+  }
+
+  function renderIntro(key) {
+    var r = key.split(":")[1];
+    var prevHtml = "";
+    if (state.pos > 0) {
+      var prevR = byId[state.queue[state.pos - 1]].r;
+      var ids = roundQs(prevR).map(function (q) { return q.id; }).filter(function (id) { return state.picks[id]; });
+      prevHtml = '<p class="prev">Round ' + prevR + ' done: <b>' + scoreOf(ids) + ' of ' + ids.length + '</b> correct.</p>';
+    }
+    var body;
+    if (r === "retry") {
+      body = '<div class="intro-no">2nd</div><h2>Second chance</h2><p>Here are the ' + (state.queue.length - 1) + ' questions you got wrong. Try them again.</p>';
+    } else {
+      var R = ROUNDS[r - 1];
+      body = '<div class="label">Round ' + r + ' of ' + ROUNDS.length + '</div><div class="intro-no">' + r + '</div><h2>' + esc(R.title) + '</h2><p>' + esc(R.intro) + '</p>' +
+        '<p class="hint">' + roundQs(+r).length + ' questions · Tip: you can also answer with the number keys 1–4.</p>';
+    }
+    app.innerHTML = header(true) + '<section class="card intro">' + prevHtml + body +
+      '<div class="actions"><button class="btn primary" id="go" data-action="next">Start round</button></div></section>';
+    focus("go");
+  }
+
+  function renderQuestion(id) {
+    var q = byId[id], pick = state.picks[id];
+    var ids = qIds(), n = ids.indexOf(id);
+    var inRound = state.queue[0] === "intro:retry" ? ids : roundQs(q.r).map(function (x) { return x.id; }).filter(function (x) { return ids.indexOf(x) >= 0; });
+    var k = inRound.indexOf(id);
+    var answered = Object.keys(state.picks).length;
+    var where = state.queue[0] === "intro:retry" ? "Second chance" : "Round " + q.r + " · " + ROUNDS[q.r - 1].title;
+
+    var html = header(true) +
+      '<div class="qbar"><span class="where">' + esc(where) + '</span><span class="score">Question ' + (k + 1) + ' of ' + inRound.length + ' · Score ' + scoreOf(ids) + '/' + answered + '</span></div>' +
+      '<div class="prog" aria-hidden="true"><div style="width:' + Math.round((n + (pick ? 1 : 0)) / ids.length * 100) + '%"></div></div>' +
+      '<section class="card">';
+
+    if (q.kind === "spot") {
+      html += '<p class="label">' + (q.page === "tab" ? "Front page 1 · a red-top tabloid" : "Front page 2 · a quality paper") + '</p>' +
+        '<h2 class="stmt">' + esc(q.prompt) + '</h2>' + frontPage(q.page);
+    } else {
+      html += '<p class="label">' + esc(q.prompt) + '</p>';
+      if (q.text) html += '<h2 class="stmt' + (q.quote ? " quote" : "") + '">' + esc(q.text) + '</h2>';
+      if (q.src) html += '<p class="src">Source: ' + esc(q.src) + '</p>';
+      var ord = q.fixed ? q.options.map(function (_, i) { return i; }) : state.order[id];
+      html += '<div class="opts' + (q.list ? " list" : "") + '">' + ord.map(function (oi, di) {
+        var cls = "";
+        if (pick) cls = oi === q.answer ? " is-correct" : (oi === pick.val ? " is-wrong" : " is-dim");
+        return '<button class="opt' + cls + '" data-action="pick" data-val="' + oi + '"' + (pick ? " disabled" : "") + '>' +
+          '<span class="key">' + (di + 1) + '</span><span>' + esc(q.options[oi]) + '</span></button>';
+      }).join("") + '</div>';
+    }
+
+    if (pick) {
+      var right = q.kind === "spot" ? PART_NAMES[q.part] : q.options[q.answer];
+      var last = state.pos + 1 >= state.queue.length;
+      var nextIntro = !last && state.queue[state.pos + 1].indexOf("intro:") === 0;
+      html += '<div class="fb ' + (pick.ok ? "ok" : "bad") + '" role="status"><div class="fb-tag">' + (pick.ok ? "Correct" : "Not quite") + '</div>' +
+        '<p>' + (pick.ok ? "" : (q.kind === "spot" ? "You tapped: <b>" + esc(PART_NAMES[pick.val] || pick.val) + "</b>. " : "") + "Correct answer: <b>" + esc(right) + "</b>. ") + esc(q.explain) + '</p></div>' +
+        '<div class="actions"><button class="btn primary" id="go" data-action="next">' + (last ? "See my results" : nextIntro ? "Next round" : "Next question") + '</button></div>';
+    } else if (q.kind === "spot") {
+      html += '<p class="hint">Dashed outlines mark the parts you can tap.</p>';
+    }
+    html += '</section>';
+    app.innerHTML = html;
+
+    if (q.kind === "spot") {
+      var fp = app.querySelector(".fp");
+      if (!pick) {
+        fp.classList.add("live");
+        fp.querySelectorAll("[data-part]").forEach(function (el) {
+          el.setAttribute("tabindex", "0"); el.setAttribute("role", "button");
+          el.setAttribute("aria-label", "Page element");
+        });
+      } else {
+        var c = fp.querySelector('[data-part="' + q.part + '"]'); if (c) c.classList.add("hit-ok");
+        if (!pick.ok) { var w = fp.querySelector('[data-part="' + pick.val + '"]'); if (w) w.classList.add("hit-bad"); }
+      }
+    }
+    if (pick) focus("go");
+  }
+
+  function renderResults() {
+    var ids = qIds(), s = scoreOf(ids), total = ids.length, pct = total ? Math.round(s / total * 100) : 0;
+    var nm = state.name.trim();
+    var who = nm ? esc(nm.toUpperCase()) + " SCORES" : "YOU SCORED";
+    var verdict = pct >= 90 ? "Front-page material!" : pct >= 70 ? "Good reporting: just a few corrections needed." : pct >= 50 ? "A solid first draft. Check the corrections below." : "Back to the newsroom. Try the wrong answers again.";
+    var retry = state.queue[0] === "intro:retry";
+
+    var rows = retry ? "" : ROUNDS.map(function (R) {
+      var rid = ids.filter(function (id) { return byId[id].r === R.id; });
+      if (!rid.length) return "";
+      var rs = scoreOf(rid);
+      return '<div class="res-row"><span>' + R.id + '. ' + esc(R.title) + '</span><span class="v">' + rs + '/' + rid.length + '</span>' +
+        '<div class="bar"><div style="width:' + Math.round(rs / rid.length * 100) + '%"></div></div></div>';
+    }).join("");
+
+    var wrong = ids.filter(function (id) { return state.picks[id] && !state.picks[id].ok; });
+    var list = wrong.map(function (id) {
+      var q = byId[id], p = state.picks[id];
+      var yours = q.kind === "spot" ? PART_NAMES[p.val] || p.val : q.options[p.val];
+      var right = q.kind === "spot" ? PART_NAMES[q.part] : q.options[q.answer];
+      var title = q.kind === "spot" ? q.prompt + (q.page === "tab" ? " (tabloid page)" : " (quality page)") : (q.text ? "“" + q.text + "”" : q.prompt);
+      return '<li><span>' + esc(title) + '</span><span class="yours">Your answer: ' + esc(yours) + '</span><span class="right">Correct: ' + esc(right) + '</span></li>';
+    }).join("");
+
+    app.innerHTML = header(true) +
+      '<section class="res-front" aria-label="Your result">' +
+        '<div class="tab-mast" style="flex:none;font-size:1.6rem"><small>The</small>Quiz Gazette</div>' +
+        '<h2 class="tab-head">' + who + ' ' + s + ' OUT OF ' + total + '!</h2>' +
+        '<p class="q-stand">' + (nm ? esc(nm) : "Student") + ' answers ' + pct + ' per cent of the questions correctly in newspaper quiz' + (retry ? " (second chance)" : "") + '</p>' +
+      '</section>' +
+      '<section class="card"><p><b>' + esc(verdict) + '</b></p>' + (rows ? '<div class="res-rows">' + rows + '</div>' : "") +
+        '<div class="actions">' +
+          (wrong.length ? '<button class="btn primary" data-action="retry">Try the ' + wrong.length + ' wrong answer' + (wrong.length > 1 ? "s" : "") + ' again</button>' : "") +
+          '<button class="btn" data-action="bonus">Bonus: write your own headlines</button>' +
+          '<button class="btn link" data-action="menu">Back to menu</button>' +
+        '</div></section>' +
+      (wrong.length ? '<section class="card"><h2 class="label">Corrections</h2><ul class="mistakes">' + list + '</ul></section>' : "");
+  }
+
+  function renderBonus() {
+    var b = state.bonus;
+    app.innerHTML = header(true) +
+      '<section class="card">' +
+        '<p class="label">Bonus · no points</p>' +
+        '<h2 class="stmt">One story, two papers</h2>' +
+        '<p>Write a headline for a red top and one for a quality paper. Your headlines appear on the front pages as you type.</p>' +
+        '<ul class="facts">' +
+          '<li>Mia Patel (17) from Leeds has won the national Young Scientist Award.</li>' +
+          '<li>She built a robot that sorts plastic waste for recycling.</li>' +
+          '<li>The prize is £5,000. She wants to study engineering.</li>' +
+          '<li>The award was presented in London on Monday.</li>' +
+        '</ul>' +
+        '<div class="field"><label class="label" for="b-tab">Your tabloid headline</label><input id="b-tab" type="text" maxlength="80" value="' + esc(b.tab) + '"></div>' +
+        '<div class="field"><label class="label" for="b-qual">Your quality-press headline</label><input id="b-qual" type="text" maxlength="120" value="' + esc(b.qual) + '"></div>' +
+        '<div class="preview-grid">' +
+          '<div class="mini"><div class="tab-mast"><small>The</small>Daily Blast</div><div class="tab-head" id="pv-tab"></div></div>' +
+          '<div class="mini"><div class="q-mast">The Chronicle</div><div class="q-folio"><span>Tuesday</span><span>£3.20</span></div><div class="q-head" id="pv-qual"></div></div>' +
+        '</div>' +
+        '<div class="actions"><button class="btn primary" data-action="showcheck">' + (b.shown ? "Hide checklist" : "Check my headlines") + '</button>' +
+        '<button class="btn link" data-action="menu">Back to menu</button></div>' +
+        '<div class="check"' + (b.shown ? "" : " hidden") + '>' +
+          '<div><b>Tabloid checklist</b><ul><li>Short: only a few words</li><li>Emotive or dramatic words</li><li>Wordplay, pun, rhyme or alliteration</li><li>Informal, colloquial language</li><li>Capital letters or an exclamation mark</li></ul>' +
+            '<p class="hint">Example: <span class="sample">ROBO-GIRL BINS THE COMPETITION! Mia’s plastic-sorting bot scoops five grand</span></p></div>' +
+          '<div><b>Quality-press checklist</b><ul><li>Says clearly who did what</li><li>Neutral, formal vocabulary</li><li>Facts instead of feelings</li><li>No exclamation mark</li><li>Can be longer and more complete</li></ul>' +
+            '<p class="hint">Example: <span class="sample">Leeds student wins national science award for plastic-sorting robot</span></p></div>' +
+        '</div>' +
+      '</section>';
+    updatePreview();
+  }
+  function updatePreview() {
+    var t = document.getElementById("pv-tab"), q = document.getElementById("pv-qual");
+    if (t) t.innerHTML = state.bonus.tab.trim() ? esc(state.bonus.tab) : '<span class="empty">Your tabloid headline appears here.</span>';
+    if (q) q.innerHTML = state.bonus.qual.trim() ? esc(state.bonus.qual) : '<span class="empty">Your quality-press headline appears here.</span>';
+  }
+
+  function focus(id) { var el = document.getElementById(id); if (el) { try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); } } }
+
+  function render() {
+    if (state.screen === "menu") renderMenu();
+    else if (state.screen === "results") renderResults();
+    else if (state.screen === "bonus") renderBonus();
+    else {
+      var item = state.queue[state.pos];
+      if (item.indexOf("intro:") === 0) renderIntro(item); else renderQuestion(item);
+    }
+  }
+  function goTop() { window.scrollTo({ top: 0, behavior: "auto" }); }
+
+  /* ================= events ================= */
+  function answer(val) {
+    var id = state.queue[state.pos], q = byId[id];
+    if (!q || state.picks[id]) return;
+    var ok = q.kind === "spot" ? val === q.part : +val === q.answer;
+    state.picks[id] = { val: q.kind === "spot" ? val : +val, ok: ok };
+    state.leave = false;
+    render();
+  }
+
+  app.addEventListener("click", function (e) {
+    var part = e.target.closest(".fp.live [data-part]");
+    if (part) { answer(part.getAttribute("data-part")); return; }
+    var el = e.target.closest("[data-action]");
+    if (!el) return;
+    var a = el.getAttribute("data-action");
+    if (a === "all") { startRounds(ROUNDS.map(function (r) { return r.id; })); goTop(); }
+    else if (a === "round") { startRounds([+el.getAttribute("data-r")]); goTop(); }
+    else if (a === "pick") answer(el.getAttribute("data-val"));
+    else if (a === "next") {
+      state.pos++; state.leave = false;
+      if (state.pos >= state.queue.length) state.screen = "results";
+      render(); goTop();
+    }
+    else if (a === "leave") {
+      if (state.leave) { state.screen = "menu"; state.leave = false; render(); goTop(); }
+      else { state.leave = true; render(); }
+    }
+    else if (a === "menu") { state.screen = "menu"; render(); goTop(); }
+    else if (a === "retry") { retryWrong(); goTop(); }
+    else if (a === "bonus") { state.screen = "bonus"; render(); goTop(); }
+    else if (a === "showcheck") { state.bonus.shown = !state.bonus.shown; render(); }
+  });
+
+  app.addEventListener("input", function (e) {
+    if (e.target.id === "name") state.name = e.target.value;
+    else if (e.target.id === "b-tab") { state.bonus.tab = e.target.value; updatePreview(); }
+    else if (e.target.id === "b-qual") { state.bonus.qual = e.target.value; updatePreview(); }
+  });
+
+  document.addEventListener("keydown", function (e) {
+    var tag = (e.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "textarea") return;
+    if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches(".fp.live [data-part]")) {
+      e.preventDefault(); answer(e.target.getAttribute("data-part")); return;
+    }
+    if (state.screen !== "quiz" || !/^[1-4]$/.test(e.key)) return;
+    var btns = app.querySelectorAll(".opt:not(:disabled)");
+    var b = btns[+e.key - 1];
+    if (b) { e.preventDefault(); b.click(); }
+  });
+
+  /* ================= boot ================= */
+  var hot = window.claude && window.claude.hot;
+  if (hot && typeof hot.snapshot === "function") { try { hot.snapshot(function () { return { state: state }; }); } catch (e) {} }
+  function start(data) {
+    if (data && data.state && data.state.queue) state = data.state;
+    render();
+  }
+  if (hot && typeof hot.ready === "function") hot.ready(start); else start((hot && hot.data) || {});
+})();
+</script>
+</body>
+</html>
