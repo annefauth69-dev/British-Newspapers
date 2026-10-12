@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>At the Restaurant</title>
+<style>
+  :root {
+    --bg: #f6f1e7;
+    --paper: #fffdf8;
+    --ink: #2b2420;
+    --muted: #6f655c;
+    --line: #e2d8c7;
+    --brand: #7a1f2b;
+    --brand-ink: #ffffff;
+    --accent: #1f5c4a;
+    --good: #2f7d4f;
+    --good-bg: #e5f3ea;
+    --bad: #b3401f;
+    --bad-bg: #fbe9e3;
+    --info-bg: #eef1f8;
+    --waiter: #f0e8da;
+    --guest: #dcece5;
+    --shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1916; --paper: #26221e; --ink: #f1ebe2; --muted: #b0a597; --line: #3d362f;
+      --brand: #c4505f; --brand-ink: #fff; --accent: #5bb196; --good: #6cc792; --good-bg: #20352a;
+      --bad: #f08a6b; --bad-bg: #3d2620; --info-bg: #262c3a; --waiter: #332c24; --guest: #22352e;
+      --shadow: 0 1px 2px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1916; --paper: #26221e; --ink: #f1ebe2; --muted: #b0a597; --line: #3d362f;
+    --brand: #c4505f; --brand-ink: #fff; --accent: #5bb196; --good: #6cc792; --good-bg: #20352a;
+    --bad: #f08a6b; --bad-bg: #3d2620; --info-bg: #262c3a; --waiter: #332c24; --guest: #22352e;
+    --shadow: 0 1px 2px rgba(0,0,0,.3);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  header {
+    background: var(--brand); color: var(--brand-ink);
+    padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  header h1 { font: 600 20px/1.2 Georgia, "Times New Roman", serif; margin: 0; flex: 1; min-width: 180px; }
+  header h1 small { display: block; font: 13px/1.3 system-ui, sans-serif; opacity: .85; }
+  nav { display: flex; gap: 4px; flex-wrap: wrap; }
+  nav button {
+    background: transparent; color: var(--brand-ink); border: 1px solid rgba(255,255,255,.4);
+    border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 14px; cursor: pointer;
+  }
+  nav button[aria-selected="true"] { background: var(--brand-ink); color: var(--brand); }
+  main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  section[hidden] { display: none !important; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: var(--shadow); }
+  h2 { font: 600 22px/1.25 Georgia, serif; margin: 0 0 8px; }
+  h3 { font-size: 16px; margin: 16px 0 6px; }
+  p { margin: 0 0 10px; }
+  .muted { color: var(--muted); }
+  .de { color: var(--muted); font-style: italic; font-size: 14px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; font: inherit; cursor: pointer;
+    background: var(--paper); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 14px;
+  }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+  .btn.small { padding: 4px 10px; font-size: 14px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  label.opt { display: flex; gap: 8px; align-items: flex-start; padding: 10px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; flex: 1; min-width: 220px; }
+  label.opt:has(input:checked) { border-color: var(--brand); background: var(--info-bg); }
+  input[type="text"] {
+    font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--paper); color: var(--ink); min-width: 0;
+  }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* Simulation layout */
+  .sim { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+  @media (max-width: 860px) { .sim { grid-template-columns: 1fr; } }
+  .chat { display: flex; flex-direction: column; height: min(70vh, 640px); padding: 0; overflow: hidden; }
+  .chat-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .chat-top .row { gap: 6px; }
+  .msgs { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 85%; padding: 8px 12px; border-radius: 12px; }
+  .msg .who { font-size: 12px; font-weight: 600; color: var(--muted); display: block; }
+  .msg.waiter { background: var(--waiter); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .msg.guest { background: var(--guest); align-self: flex-end; border-bottom-right-radius: 4px; }
+  .msg.narr { align-self: center; background: transparent; color: var(--muted); font-style: italic; font-size: 14px; text-align: center; }
+  .msg.fb { align-self: stretch; max-width: 100%; font-size: 14px; border-left: 4px solid; border-radius: 6px; }
+  .msg.fb.good { background: var(--good-bg); border-color: var(--good); }
+  .msg.fb.bad { background: var(--bad-bg); border-color: var(--bad); }
+  .msg.fb.info { background: var(--info-bg); border-color: var(--accent); }
+  .msg .de { display: block; margin-top: 2px; }
+  .hide-de .msg .de { display: none; }
+  .speak { background: none; border: 0; cursor: pointer; font-size: 14px; padding: 0 0 0 4px; color: var(--muted); }
+  .answer { border-top: 1px solid var(--line); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .choices { display: flex; flex-direction: column; gap: 6px; }
+  .choices button { text-align: left; }
+  .free { display: flex; gap: 6px; }
+  .free input { flex: 1; }
+  .hintbox { font-size: 14px; background: var(--info-bg); border-radius: 8px; padding: 6px 10px; }
+
+  .side { display: flex; flex-direction: column; gap: 16px; }
+  .menu-card { font-family: Georgia, serif; }
+  .menu-card h2 { text-align: center; color: var(--brand); margin-bottom: 0; }
+  .menu-card .sub { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .menu-cat { margin-top: 10px; border-radius: 8px; padding: 4px 6px; }
+  .menu-cat.active { background: var(--info-bg); outline: 2px solid var(--accent); }
+  .menu-cat h4 { margin: 0 0 2px; text-transform: uppercase; letter-spacing: .08em; font-size: 12px; color: var(--accent); font-family: system-ui, sans-serif; }
+  .menu-item { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; padding: 2px 0; }
+  .menu-item.clickable { cursor: pointer; border-radius: 4px; }
+  .menu-item.clickable:hover { background: var(--waiter); }
+  .menu-item .d { display: block; font-size: 12px; color: var(--muted); font-family: system-ui, sans-serif; }
+  .order-list { font-size: 14px; margin: 0; padding-left: 18px; }
+  .progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  .progress > div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  .score { font-size: 14px; }
+
+  /* Vocabulary */
+  .vocab { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .flip { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--paper); cursor: pointer; min-height: 110px; text-align: left; font: inherit; color: var(--ink); }
+  .flip b { font-family: Georgia, serif; font-size: 17px; }
+  .flip .back { display: none; }
+  .flip.open .back { display: block; }
+  .flip.open .front-hint { display: none; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .table-wrap { overflow-x: auto; }
+  .quiz-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .quiz-item.ok { color: var(--good); }
+  .quiz-item.no { color: var(--bad); }
+
+  /* Result */
+  .receipt { font-family: "Courier New", monospace; background: var(--paper); border: 1px dashed var(--muted); padding: 16px; max-width: 380px; font-size: 14px; }
+  .receipt .r { display: flex; justify-content: space-between; gap: 8px; }
+  .stars { font-size: 32px; color: #d4a017; letter-spacing: 4px; }
+  .review li { margin-bottom: 8px; }
+  .tag { display: inline-block; font-size: 12px; padding: 0 6px; border-radius: 4px; }
+  .tag.good { background: var(--good-bg); color: var(--good); }
+  .tag.bad { background: var(--bad-bg); color: var(--bad); }
+  @media print {
+    header, nav, .no-print { display: none !important; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🍽️ At the Restaurant <small>The Red Lion · English A2/B1 · Role play</small></h1>
+  <nav role="tablist">
+    <button role="tab" data-tab="start" aria-selected="true">Start</button>
+    <button role="tab" data-tab="vocab" aria-selected="false">Vocabulary</button>
+    <button role="tab" data-tab="phrases" aria-selected="false">Phrases</button>
+    <button role="tab" data-tab="sim" aria-selected="false">Role play</button>
+  </nav>
+</header>
+
+<main>
+  <!-- START -->
+  <section id="tab-start">
+    <div class="grid2">
+      <div class="card">
+        <h2>Welcome to The Red Lion!</h2>
+        <p>You are in a traditional British pub restaurant in London. It's Friday evening and you are hungry. The waiter is going to help you – but you have to speak English!</p>
+        <p class="de">Du bist in einem typisch britischen Pub-Restaurant in London. Bestelle auf Englisch Getränke und Essen, reagiere auf die Fragen des Kellners, löse ein kleines Problem und bezahle die Rechnung.</p>
+        <h3>Your tasks</h3>
+        <ol>
+          <li>Ask for a table.</li>
+          <li>Order a drink, a starter, a main course and a dessert.</li>
+          <li>Answer the waiter's questions (sides, allergies …).</li>
+          <li>Complain politely if something goes wrong.</li>
+          <li>Ask for the bill and pay.</li>
+        </ol>
+        <p class="muted">Tip: Be polite! Use <b>please</b>, <b>thank you</b>, <b>I'd like …</b>, <b>Could I have …?</b></p>
+      </div>
+      <div class="card">
+        <h2>Set up your visit</h2>
+        <h3>1. Your name (for the reservation)</h3>
+        <input type="text" id="guestName" placeholder="e.g. Alex Miller" style="width:100%" maxlength="40">
+        <h3>2. Choose your level</h3>
+        <div class="row">
+          <label class="opt"><input type="radio" name="level" value="A2" checked>
+            <span><b>A2 – Choose</b><br><span class="muted" style="font-size:14px">Choose the best answer. <span class="de">Wähle die passende Antwort.</span></span></span></label>
+          <label class="opt"><input type="radio" name="level" value="B1">
+            <span><b>B1 – Write / Speak</b><br><span class="muted" style="font-size:14px">Write or say your own answer. <span class="de">Schreibe oder sprich deine eigene Antwort.</span></span></span></label>
+        </div>
+        <h3>3. Options</h3>
+        <label class="row"><input type="checkbox" id="optVoice" checked> The waiter speaks (audio)</label>
+        <label class="row"><input type="checkbox" id="optGerman"> Show German help <span class="de">(Deutsche Hilfe anzeigen)</span></label>
+        <p style="margin-top:16px"><button class="btn primary" id="startBtn">▶ Enter the restaurant</button></p>
+        <p class="muted" style="font-size:14px">First time? Look at the <a href="#" data-goto="vocab">vocabulary</a> and <a href="#" data-goto="phrases">phrases</a> first.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- VOCAB -->
+  <section id="tab-vocab" hidden>
+    <div class="card">
+      <h2>British food – what's on the menu?</h2>
+      <p class="muted">Click a card to see what it is and the German word. <span class="de">Klicke auf eine Karte.</span></p>
+      <div class="row" style="margin-bottom:10px">
+        <button class="btn small" id="openAll">Show all</button>
+        <button class="btn small" id="closeAll">Hide all</button>
+      </div>
+      <div id="vocabGrid"></div>
+      <h3 style="margin-top:24px">More useful words</h3>
+      <div class="table-wrap"><table id="wordTable"></table></div>
+    </div>
+  </section>
+
+  <!-- PHRASES -->
+  <section id="tab-phrases" hidden>
+    <div class="grid2">
+      <div class="card">
+        <h2>Useful phrases</h2>
+        <div class="table-wrap"><table id="phraseTable"></table></div>
+      </div>
+      <div class="card">
+        <h2>Warm-up: Who says it?</h2>
+        <p class="muted">Guest or waiter? <span class="de">Gast oder Kellner?</span></p>
+        <div id="quiz"></div>
+        <p id="quizScore" class="score" style="margin-top:10px"></p>
+        <button class="btn small" id="quizReset">Try again</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SIMULATION -->
+  <section id="tab-sim" hidden>
+    <div class="sim">
+      <div class="card chat" id="chatCard">
+        <div class="chat-top">
+          <div style="flex:1; min-width:160px">
+            <div class="progress"><div id="prog"></div></div>
+            <div class="score muted" id="scoreLine" style="margin-top:4px">Points: 0</div>
+          </div>
+          <div class="row">
+            <button class="btn small" id="repeatBtn" title="Listen again">🔁 Repeat</button>
+            <button class="btn small" id="deBtn" title="German help">🇩🇪 Help</button>
+            <button class="btn small" id="voiceBtn" title="Audio on/off">🔊</button>
+            <button class="btn small" id="restartBtn" title="Start again">↺</button>
+          </div>
+        </div>
+        <div class="msgs" id="msgs" aria-live="polite"></div>
+        <div class="answer" id="answer"></div>
+      </div>
+      <div class="side">
+        <div class="card menu-card" id="menuCard"></div>
+        <div class="card">
+          <h3 style="margin-top:0">Your order</h3>
+          <ul class="order-list" id="orderList"><li class="muted">Nothing yet</li></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="tab-result" hidden>
+    <div class="grid2">
+      <div class="card">
+        <h2>Thank you for visiting The Red Lion!</h2>
+        <div class="stars" id="stars"></div>
+        <p id="resultText"></p>
+        <div class="row no-print" style="margin:12px 0">
+          <button class="btn primary" id="againBtn">↺ Play again</button>
+          <button class="btn" id="switchBtn"></button>
+          <button class="btn" onclick="window.print()">🖨 Print</button>
+        </div>
+        <h3>Your answers</h3>
+        <ol class="review" id="review"></ol>
+      </div>
+      <div>
+        <div class="receipt" id="receipt"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------- Data
+const MENU = {
+  drink: { title: "Drinks", items: [
+    { id: "tea", name: "cup of tea", label: "Cup of tea", price: 2.20, de: "Tasse Tee", desc: "Black tea – the British way is with milk.", kw: ["tea"] },
+    { id: "coffee", name: "coffee", label: "Coffee", price: 2.50, de: "Kaffee", desc: "Filter coffee.", kw: ["coffee"] },
+    { id: "juice", name: "orange juice", label: "Orange juice", price: 2.80, de: "Orangensaft", desc: "Freshly squeezed.", kw: ["juice", "orange"] },
+    { id: "lemonade", name: "lemonade", label: "Lemonade", price: 2.60, de: "Zitronenlimonade", desc: "In the UK: a clear, fizzy lemon drink.", kw: ["lemonade"] },
+    { id: "cola", name: "cola", label: "Cola", price: 2.60, de: "Cola", desc: "A glass of cola.", kw: ["cola", "coke"] },
+    { id: "water", name: "bottle of water", label: "Mineral water", price: 1.80, de: "Mineralwasser", desc: "Still or sparkling.", kw: ["water"] },
+  ]},
+  starter: { title: "Starters", optional: true, items: [
+    { id: "soup", name: "tomato soup", label: "Tomato soup", price: 5.50, de: "Tomatensuppe", desc: "With crusty bread and butter.", kw: ["soup", "tomato"] },
+    { id: "prawn", name: "prawn cocktail", label: "Prawn cocktail", price: 6.95, de: "Krabbencocktail", desc: "Prawns with lettuce and a pink sauce.", kw: ["prawn", "cocktail", "shrimp"] },
+    { id: "scotch", name: "Scotch egg", label: "Scotch egg", price: 5.95, de: "Schottisches Ei", desc: "A boiled egg in sausage meat and breadcrumbs.", kw: ["scotch", "egg"] },
+    { id: "mushrooms", name: "garlic mushrooms", label: "Garlic mushrooms (v)", price: 5.50, de: "Knoblauchpilze", desc: "Fried mushrooms with garlic butter on toast.", kw: ["mushroom", "garlic"] },
+  ]},
+  main: { title: "Main courses", items: [
+    { id: "fish", name: "fish and chips", label: "Fish and chips", price: 13.95, de: "Fisch mit Pommes", desc: "Fried cod in batter with thick chips.", kw: ["fish"] },
+    { id: "steakpie", name: "steak and ale pie", label: "Steak and ale pie", price: 14.50, de: "Rindfleisch-Bier-Pastete", desc: "Beef cooked in dark beer, in pastry.", kw: ["steak", "ale", "pie with beef", "beef pie"] },
+    { id: "shepherd", name: "shepherd's pie", label: "Shepherd's pie", price: 12.50, de: "Hackfleischauflauf mit Kartoffelbrei", desc: "Minced lamb with mashed potato on top.", kw: ["shepherd", "shepard", "sheperd"] },
+    { id: "bangers", name: "bangers and mash", label: "Bangers and mash", price: 11.95, de: "Würstchen mit Kartoffelbrei", desc: "Sausages with mashed potatoes.", kw: ["banger", "sausage", "mash"] },
+    { id: "roast", name: "Sunday roast", label: "Sunday roast", price: 15.95, de: "Sonntagsbraten", desc: "Roast meat, roast potatoes, vegetables, Yorkshire pudding and gravy.", kw: ["roast"] },
+    { id: "curry", name: "chicken tikka masala", label: "Chicken tikka masala", price: 13.50, de: "Hähnchen-Curry", desc: "Britain's favourite curry: chicken in a creamy tomato sauce.", kw: ["tikka", "masala", "curry", "chicken"] },
+    { id: "burger", name: "veggie burger", label: "Veggie burger (v)", price: 11.50, de: "vegetarischer Burger", desc: "A bean burger in a bun.", kw: ["burger", "veggie", "vegetarian"] },
+  ]},
+  dessert: { title: "Desserts", optional: true, items: [
+    { id: "toffee", name: "sticky toffee pudding", label: "Sticky toffee pudding", price: 6.50, de: "Dattelkuchen mit Karamellsoße", desc: "Warm date sponge cake with toffee sauce.", kw: ["toffee", "sticky"] },
+    { id: "crumble", name: "apple crumble", label: "Apple crumble", price: 5.95, de: "Apfel-Streuselauflauf", desc: "Baked apples with a crunchy topping.", kw: ["crumble", "apple"] },
+    { id: "eton", name: "Eton mess", label: "Eton mess", price: 5.95, de: "Erdbeeren mit Sahne und Baiser", desc: "Strawberries, cream and broken meringue.", kw: ["eton", "mess", "strawberr"] },
+    { id: "trifle", name: "trifle", label: "Trifle", price: 5.50, de: "Schichtdessert", desc: "Layers of fruit, sponge, custard and cream.", kw: ["trifle"] },
+    { id: "scones", name: "scones", label: "Scones with jam and cream", price: 5.50, de: "Teegebäck mit Marmelade und Sahne", desc: "Two scones with strawberry jam and clotted cream.", kw: ["scone"] },
+  ]},
+};
+const ALL_ITEMS = Object.values(MENU).flatMap(c => c.items);
+const item = id => ALL_ITEMS.find(i => i.id === id);
+
+// Follow-up questions of the waiter, depending on what was ordered
+const FOLLOW = {
+  water:   { q: "Still or sparkling?", de: "Still oder mit Kohlensäure?", opts: [
+    { v: "still", kw: ["still", "without", "no gas", "flat"], say: "Still, please." },
+    { v: "sparkling", kw: ["sparkl", "fizzy", "with gas", "bubbl"], say: "Sparkling, please." } ] },
+  tea:     { q: "Would you like milk and sugar with that?", de: "Möchten Sie Milch und Zucker dazu?", opts: [
+    { v: "with milk", kw: ["milk", "yes"], not: ["no milk", "without milk"], say: "Just milk, please." },
+    { v: "black", kw: [" no ", "black", "without", "nothing"], say: "No, thank you. Just black." } ] },
+  coffee:  { q: "Black or white?", de: "Schwarz oder mit Milch?", opts: [
+    { v: "black", kw: ["black", "without", "no milk"], say: "Black, please." },
+    { v: "white", kw: ["white", "milk"], say: "White, please." } ] },
+  juice:   { q: "Would you like ice with that?", de: "Möchten Sie Eis dazu?", opts: [
+    { v: "with ice", kw: ["yes", "please", "ice"], not: ["no ice", "without", " no "], say: "Yes, please." },
+    { v: "no ice", kw: [" no ", "without"], say: "No ice, thank you." } ] },
+  fish:    { q: "Would you like mushy peas or garden peas with that?", de: "Möchten Sie Erbsenpüree oder Erbsen dazu?", opts: [
+    { v: "mushy peas", kw: ["mushy"], say: "Mushy peas, please." },
+    { v: "garden peas", kw: ["garden"], say: "Garden peas, please." } ] },
+  steakpie:{ q: "Would you like chips or mashed potatoes with that?", de: "Möchten Sie Pommes oder Kartoffelbrei dazu?", opts: [
+    { v: "chips", kw: ["chip", "fries"], say: "Chips, please." },
+    { v: "mashed potatoes", kw: ["mash", "potato"], say: "Mashed potatoes, please." } ] },
+  shepherd:{ q: "It comes with vegetables. Would you like some extra gravy?", de: "Dazu gibt es Gemüse. Möchten Sie extra Bratensoße?", opts: [
+    { v: "extra gravy", kw: ["yes", "gravy", "please"], not: [" no ", "without"], say: "Yes, please." },
+    { v: "no extra gravy", kw: [" no ", "without"], say: "No, thank you." } ] },
+  bangers: { q: "Would you like onion gravy with it?", de: "Möchten Sie Zwiebelsoße dazu?", opts: [
+    { v: "with onion gravy", kw: ["yes", "gravy", "please"], not: [" no ", "without"], say: "Yes, please." },
+    { v: "no gravy", kw: [" no ", "without"], say: "No, thanks." } ] },
+  roast:   { q: "Would you like beef, chicken or lamb?", de: "Möchten Sie Rind, Hähnchen oder Lamm?", opts: [
+    { v: "beef", kw: ["beef"], say: "Beef, please." },
+    { v: "chicken", kw: ["chicken"], say: "Chicken, please." },
+    { v: "lamb", kw: ["lamb"], say: "Lamb, please." } ] },
+  curry:   { q: "How spicy would you like it – mild, medium or hot? And rice or naan bread?", de: "Wie scharf möchten Sie es – mild, mittel oder scharf? Und Reis oder Naan-Brot?", opts: [
+    { v: "mild, with rice", kw: ["mild"], say: "Mild, please, with rice." },
+    { v: "medium, with naan", kw: ["medium"], say: "Medium, please, with naan bread." },
+    { v: "hot, with rice", kw: ["hot", "spicy"], say: "Hot, please, with rice." } ] },
+  burger:  { q: "Would you like chips or a side salad with that?", de: "Möchten Sie Pommes oder einen Beilagensalat dazu?", opts: [
+    { v: "chips", kw: ["chip", "fries"], say: "Chips, please." },
+    { v: "side salad", kw: ["salad"], say: "A side salad, please." } ] },
+  toffee:  { q: "Would you like it with custard, cream or vanilla ice cream?", de: "Möchten Sie es mit Vanillesoße, Sahne oder Vanilleeis?", opts: [
+    { v: "with custard", kw: ["custard"], say: "With custard, please." },
+    { v: "with cream", kw: ["cream"], say: "With cream, please." },
+    { v: "with ice cream", kw: ["ice"], say: "With ice cream, please." } ] },
+};
+FOLLOW.lemonade = FOLLOW.cola = FOLLOW.juice;
+FOLLOW.crumble = FOLLOW.toffee;
+
+const WORDS = [
+  ["menu", "Speisekarte"], ["starter", "Vorspeise"], ["main course", "Hauptgericht"], ["dessert / pudding", "Nachtisch"],
+  ["the bill (US: check)", "die Rechnung"], ["tip", "Trinkgeld"], ["change", "Wechselgeld"], ["waiter / waitress", "Kellner / Kellnerin"],
+  ["reservation / to book a table", "Reservierung / einen Tisch reservieren"], ["chips (US: fries)", "Pommes"], ["crisps (US: chips)", "Kartoffelchips"],
+  ["gravy", "Bratensoße"], ["custard", "Vanillesoße"], ["still / sparkling water", "stilles Wasser / Sprudel"],
+  ["allergic to …", "allergisch gegen …"], ["vegetarian (v)", "vegetarisch"], ["spicy", "scharf"], ["delicious", "lecker"],
+  ["cold / overcooked / undercooked", "kalt / verkocht / nicht durch"], ["by card / in cash", "mit Karte / bar"],
+];
+
+const PHRASES = [
+  ["Guest", "Have you got a table for two, please?", "Haben Sie einen Tisch für zwei?"],
+  ["Guest", "I've booked a table under the name …", "Ich habe einen Tisch auf den Namen … reserviert."],
+  ["Waiter", "Can I get you something to drink?", "Kann ich Ihnen etwas zu trinken bringen?"],
+  ["Guest", "Could I have a …, please?", "Könnte ich ein/e … haben?"],
+  ["Waiter", "Are you ready to order?", "Möchten Sie bestellen?"],
+  ["Guest", "I'd like the …, please. / I'll have the …", "Ich hätte gern … / Ich nehme …"],
+  ["Guest", "What do you recommend?", "Was empfehlen Sie?"],
+  ["Guest", "What is … exactly?", "Was ist … genau?"],
+  ["Waiter", "Do you have any allergies?", "Haben Sie Allergien?"],
+  ["Guest", "I'm allergic to nuts. / I'm vegetarian.", "Ich bin allergisch gegen Nüsse. / Ich bin Vegetarier/in."],
+  ["Guest", "Sorry, could you repeat that, please?", "Entschuldigung, können Sie das wiederholen?"],
+  ["Guest", "Excuse me, I'm afraid this isn't what I ordered.", "Entschuldigung, das habe ich leider nicht bestellt."],
+  ["Guest", "Excuse me, my food is cold.", "Entschuldigung, mein Essen ist kalt."],
+  ["Waiter", "Is everything all right with your meal?", "Ist alles in Ordnung mit Ihrem Essen?"],
+  ["Guest", "Yes, it's delicious, thank you.", "Ja, es ist sehr lecker, danke."],
+  ["Guest", "Could we have the bill, please?", "Könnten wir die Rechnung haben?"],
+  ["Waiter", "How would you like to pay?", "Wie möchten Sie bezahlen?"],
+  ["Guest", "By card, please. / In cash.", "Mit Karte, bitte. / Bar."],
+  ["Guest", "Keep the change.", "Stimmt so."],
+];
+
+const QUIZ = [
+  ["Are you ready to order?", "Waiter"], ["Could we have the bill, please?", "Guest"],
+  ["Still or sparkling?", "Waiter"], ["I'll have the fish and chips.", "Guest"],
+  ["Would you like to see the dessert menu?", "Waiter"], ["Excuse me, my soup is cold.", "Guest"],
+  ["How would you like to pay?", "Waiter"], ["Keep the change.", "Guest"],
+  ["Right this way, please.", "Waiter"], ["What do you recommend?", "Guest"],
+];
+
+// ---------------------------------------------------------------- Helpers
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const money = n => "£" + n.toFixed(2);
+const norm = s => " " + s.toLowerCase().replace(/[’`]/g, "'").replace(/[^a-z0-9' ]+/g, " ").replace(/\s+/g, " ") + " ";
+const has = (t, words) => words.some(w => t.includes(w));
+const hasWord = (t, words) => words.some(w => new RegExp("(^|[^a-z])" + w + "([^a-z]|$)").test(t));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const shuffle = arr => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+const article = name => /^[aeiou]/i.test(name) ? "an" : "a";
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+
+function findItem(cat, t) {
+  for (const it of MENU[cat].items) if (has(t, it.kw)) return it;
+  return null;
+}
+const isNo = t => hasWord(t, ["no", "nothing", "not", "don't", "dont", "skip", "none", "nope"]);
+const isYes = t => hasWord(t, ["yes", "yeah", "yep", "sure", "please", "right", "correct", "ok", "okay", "fine"]);
+const wantsRepeat = t => has(t, ["repeat", "pardon", "again", "slowly", "slower", "didn't understand", "didnt understand", "don't understand", "dont understand"]) || t.trim() === "sorry" || t.trim() === "what";
+const NUMS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8 };
+function findNumber(t) {
+  const m = t.match(/\b([1-8])\b/); if (m) return +m[1];
+  for (const [w, n] of Object.entries(NUMS)) if (hasWord(t, [w])) return n;
+  if (hasWord(t, ["me", "myself", "alone", "just me"]) && !hasWord(t, ["we", "us"])) return null;
+  return null;
+}
+function politeness(t) {
+  const polite = has(t, ["please", "thank", "could", "would", "may i", "can i", "i'd", "i would", "excuse", "sorry", "i'll have", "i will have", "lovely", "great"]);
+  const rude = has(t, [" i want ", " give me ", " bring me ", "now!", " hurry", " stupid", " whatever "]);
+  return { polite, rude };
+}
+
+// ---------------------------------------------------------------- State
+const S = {};
+let level = "A2", voiceOn = true, cur = null, curId = null, tries = 0, busy = false;
+
+function resetState() {
+  Object.assign(S, {
+    name: ($("#guestName").value.trim() || "Smith"),
+    guests: 2, reservation: false,
+    drink: null, drinkOpt: null, starter: null, main: null, mainOpt: null, dessert: null, dessertOpt: null,
+    allergy: null, pay: null, tip: 0, wrong: null,
+    score: 0, max: 0, log: [],
+  });
+}
+
+// ---------------------------------------------------------------- Dialogue steps
+// Each step: waiter(s) -> string | string[] ("*" = narration), de(s), choices(s), parse(s, t), hint(s), next(s)
+function catChoices(cat, s, verbs) {
+  const items = MENU[cat].items;
+  const list = items.map((it, i) => ({
+    t: verbs[i % verbs.length].replace("#", (cat === "drink" ? article(it.name) + " " : "the ") + it.name),
+    good: true, apply: s => { s[cat] = it.id; },
+  }));
+  if (MENU[cat].optional) list.push({ t: cat === "starter" ? "No starter for me, thank you." : "No, thank you. I'm full.", good: true, apply: s => { s[cat] = "none"; } });
+  list.push(cat === "main"
+    ? { t: "I want food. Bring it quickly.", good: false, fb: "That sounds rude. Better: <b>I'd like the …, please.</b>" }
+    : { t: "Give me " + items[0].name + ".", good: false, fb: "Not polite. Better: <b>Could I have …, please?</b> or <b>I'd like …, please.</b>" });
+  return list;
+}
+function catParse(cat) {
+  return (s, t) => {
+    if (has(t, ["recommend", "suggest", "what's good", "whats good", "best"])) {
+      const r = pick(MENU[cat].items);
+      return { ok: false, reply: `I can recommend the ${r.name}. ${r.desc}`, fb: "Good question! Now order something." };
+    }
+    if (has(t, ["what is", "what's", "whats", "what are", "tell me about", "what kind"])) {
+      const it2 = ALL_ITEMS.find(i => has(t, i.kw));
+      if (it2) return { ok: false, reply: `The ${it2.name}? ${it2.desc}`, fb: "Good question! Now order something." };
+    }
+    const it = findItem(cat, t);
+    if (it) return { ok: true, apply: s => { s[cat] = it.id; } };
+    if (MENU[cat].optional && isNo(t)) return { ok: true, apply: s => { s[cat] = "none"; } };
+    return null;
+  };
+}
+function followStep(cat, nextId) {
+  return {
+    cat,
+    skip: s => !FOLLOW[s[cat]],
+    waiter: s => FOLLOW[s[cat]].q,
+    de: s => FOLLOW[s[cat]].de,
+    choices: s => [
+      ...FOLLOW[s[cat]].opts.map(o => ({ t: o.say, good: true, apply: s => { s[cat + "Opt"] = o.v; } })),
+      { t: "Whatever. I don't care.", good: false, fb: "That sounds rude. Choose one option and say <b>please</b>." },
+    ],
+    parse: (s, t) => {
+      const o = FOLLOW[s[cat]].opts.find(o => has(t, o.kw) && !(o.not && has(t, o.not)));
+      return o ? { ok: true, apply: s => { s[cat + "Opt"] = o.v; } } : null;
+    },
+    hint: s => FOLLOW[s[cat]].opts.map(o => o.say).join(" / "),
+    next: () => nextId,
+  };
+}
+
+const STEPS = {
+  welcome: {
+    waiter: s => ["*It's Friday evening. You walk into The Red Lion. A waiter comes to the door.", "Good evening and welcome to The Red Lion! Have you got a reservation?"],
+    de: () => "Guten Abend und willkommen! Haben Sie reserviert?",
+    choices: s => shuffle([
+      { t: `Yes, we've booked a table for two under the name ${s.name}.`, good: true, apply: s => { s.reservation = true; } },
+      { t: "No, we haven't. Have you got a table for two, please?", good: true, apply: s => { s.reservation = false; } },
+      { t: "Table. Two people.", good: false, fb: "Too short and not very polite. Use a full sentence: <b>Have you got a table for two, please?</b>" },
+    ]),
+    parse: (s, t) => {
+      const n = findNumber(t);
+      const yes = has(t, ["yes", "reserv", "booked", "book", "under the name"]) && !has(t, ["haven't", "havent", "didn't", "didnt", "no "]);
+      const no = isNo(t) || has(t, ["table for", "free table", "have you got", "do you have", "is there"]);
+      if (!yes && !no && !n) return null;
+      return { ok: true, apply: s => { s.reservation = yes; if (n) s.guests = n; } };
+    },
+    hint: s => `Yes, we've booked a table for two under the name ${s.name}. / No, we haven't. Have you got a table for two, please?`,
+    next: () => "drink",
+  },
+  drink: {
+    cat: "drink",
+    waiter: s => [
+      s.reservation ? `Ah yes, ${s.name}, a table for ${s.guests}. Please follow me.` : `No problem. We've got a nice table for ${s.guests} by the window. Right this way, please.`,
+      "*You sit down. The waiter gives you the menu.",
+      "Here's the menu. Can I get you something to drink?",
+    ],
+    de: () => "Hier ist die Karte. Kann ich Ihnen etwas zu trinken bringen?",
+    choices: s => catChoices("drink", s, ["Could I have #, please?", "I'd like #, please.", "#, please."]),
+    parse: catParse("drink"),
+    hint: () => "Could I have a cup of tea, please? / I'd like an orange juice, please.",
+    next: () => "drinkFollow",
+  },
+  drinkFollow: followStep("drink", "starter"),
+  starter: {
+    cat: "starter",
+    waiter: s => ["*The waiter brings your " + item(s.drink).name + ".", "Here you are. Are you ready to order? Would you like a starter?"],
+    de: () => "Bitte sehr. Möchten Sie bestellen? Möchten Sie eine Vorspeise?",
+    choices: s => catChoices("starter", s, ["Yes, I'd like #, please.", "I'll have #, please.", "Could I have #, please?"]),
+    parse: catParse("starter"),
+    hint: () => "Yes, I'd like the tomato soup, please. / No starter for me, thank you. / What do you recommend?",
+    next: () => "main",
+  },
+  main: {
+    cat: "main",
+    waiter: s => s.starter === "none" ? "No problem. And what would you like for your main course?" : "Good choice. And for your main course?",
+    de: () => "Und was möchten Sie als Hauptgericht?",
+    choices: s => catChoices("main", s, ["I'd like #, please.", "I'll have #, please.", "Could I have #, please?"]),
+    parse: catParse("main"),
+    hint: () => "I'd like the fish and chips, please. / I'll have the Sunday roast. / What is shepherd's pie?",
+    next: () => "mainFollow",
+  },
+  mainFollow: followStep("main", "allergy"),
+  allergy: {
+    waiter: () => "Do you have any allergies I should tell the chef about?",
+    de: () => "Haben Sie Allergien, die ich dem Koch sagen sollte?",
+    choices: () => shuffle([
+      { t: "No, I don't. Thank you.", good: true, apply: s => { s.allergy = "none"; } },
+      { t: "Yes, I'm allergic to nuts.", good: true, apply: s => { s.allergy = "nuts"; } },
+      { t: "Sorry, could you repeat that, please?", repeat: true },
+      { t: "Yes, I am.", good: false, fb: "The waiter needs more information. Say what you are allergic to: <b>I'm allergic to …</b>" },
+    ]),
+    parse: (s, t) => {
+      const m = t.match(/allergic to ([a-z' ]+?)(?: and|,| please| thank|$| )/);
+      if (m && m[1].trim()) return { ok: true, apply: s => { s.allergy = m[1].trim(); } };
+      const a = ["nut", "peanut", "gluten", "wheat", "milk", "lactose", "dairy", "egg", "fish", "shellfish", "prawn", "soy", "sesame"].find(w => t.includes(w));
+      if (a) return { ok: true, apply: s => { s.allergy = a; } };
+      if (isNo(t)) return { ok: true, apply: s => { s.allergy = "none"; } };
+      if (has(t, ["vegetarian", "vegan"])) return { ok: true, apply: s => { s.allergy = "vegetarian"; } };
+      return null;
+    },
+    hint: () => "No, I don't. / Yes, I'm allergic to nuts. / I'm vegetarian.",
+    next: () => "confirm",
+  },
+  confirm: {
+    waiter: s => {
+      const parts = [`${article(item(s.drink).name)} ${item(s.drink).name}`];
+      if (s.starter !== "none") parts.push(`the ${item(s.starter).name}`);
+      parts.push(`the ${item(s.main).name}${s.mainOpt ? " (" + s.mainOpt + ")" : ""}`);
+      const a = s.allergy && s.allergy !== "none" ? ` I'll tell the chef: ${s.allergy}.` : "";
+      return `Thank you.${a} So that's ${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}. Is that right?`;
+    },
+    de: () => "Danke. Also … Ist das richtig?",
+    choices: () => shuffle([
+      { t: "Yes, that's right. Thank you.", good: true },
+      { t: "Yes.", good: true, fb: "OK – but <b>Yes, that's right, thank you.</b> sounds friendlier." },
+      { t: "Hurry up, I'm hungry.", good: false, fb: "That's rude! Better: <b>Yes, that's right. Thank you.</b>" },
+    ]),
+    parse: (s, t) => (isYes(t) || has(t, ["that's right", "thats right", "perfect", "exactly"])) ? { ok: true } : null,
+    hint: () => "Yes, that's right. Thank you.",
+    next: () => "problem",
+  },
+  problem: {
+    waiter: s => {
+      const others = MENU.main.items.filter(i => i.id !== s.main);
+      s.wrong = pick(others).id;
+      const pre = s.starter !== "none" ? [`*You eat your ${item(s.starter).name}. It's very good. Then the waiter comes back with a plate …`] : ["*After a few minutes the waiter comes back with a plate …"];
+      return [...pre, `Here you are – one ${item(s.wrong).name}. Enjoy your meal!`];
+    },
+    de: () => "Bitte sehr – einmal … Guten Appetit! (Aber ist das wirklich dein Essen? 🤔)",
+    choices: s => shuffle([
+      { t: `Excuse me, I'm sorry, but I didn't order this. I ordered the ${item(s.main).name}.`, good: true },
+      { t: "This is wrong! Take it back now!", good: false, fb: "Right idea, but very rude! Start with <b>Excuse me, I'm sorry, but …</b>" },
+      { t: "Thank you very much.", good: false, fb: `Careful! Look at your order – you ordered the <b>${item(s.main).name}</b>. Tell the waiter politely.` },
+    ]),
+    parse: (s, t) => {
+      if (has(t, ["ordered", "order", "mistake", "wrong", "not mine", "isn't mine", "isnt mine", "not what", "didn't", "didnt", "not my", item(s.main).kw[0]])) return { ok: true };
+      if (has(t, ["thank", "lovely", "great"]) && !has(t, ["but"])) return { ok: false, fb: `Look again! Is this really what you ordered? You ordered the <b>${item(s.main).name}</b>.` };
+      return null;
+    },
+    hint: s => `Excuse me, I'm sorry, but I didn't order this. I ordered the ${item(s.main).name}.`,
+    next: () => "checkback",
+  },
+  checkback: {
+    waiter: s => [
+      `Oh, I'm so sorry! That's for another table. I'll bring you the ${item(s.main).name} right away.`,
+      `*Two minutes later you get your ${item(s.main).name}. You start eating. After a while the waiter comes back.`,
+      "Is everything all right with your meal?",
+    ],
+    de: () => "Oh, das tut mir leid! … Ist alles in Ordnung mit Ihrem Essen?",
+    choices: () => shuffle([
+      { t: "Yes, it's delicious, thank you.", good: true },
+      { t: "Yes, it's very good, thanks.", good: true },
+      { t: "Delicious food. Me like.", good: false, fb: "Wrong grammar. Better: <b>Yes, it's delicious, thank you.</b> or <b>I really like it.</b>" },
+    ]),
+    parse: (s, t) => {
+      if (!has(t, ["not bad"]) && has(t, ["cold", "salty", "bad", "not good", "not very", "too hot", "too spicy", "hair", "burnt", "burned", "overcooked", "undercooked"])) return { ok: true, reply: "Oh dear, I'm sorry about that. I'll tell the chef. The dessert is on the house!", fb: "Good – it's OK to say if something is not right, as long as you are polite." };
+      if (has(t, ["delicious", "good", "great", "lovely", "nice", "fine", "tasty", "excellent", "perfect", "yes", "love", "like", "fantastic"])) return { ok: true };
+      return null;
+    },
+    hint: () => "Yes, it's delicious, thank you. / It's very good, thanks. / Actually, it's a bit cold.",
+    next: () => "dessert",
+  },
+  dessert: {
+    cat: "dessert",
+    waiter: () => ["*You finish your main course. The waiter takes your plate.", "Would you like a dessert? We've got some lovely British puddings."],
+    de: () => "Möchten Sie einen Nachtisch? Wir haben leckere britische Desserts.",
+    choices: s => catChoices("dessert", s, ["Yes, please. I'd like #.", "I'll have #, please.", "Could I have #, please?"]),
+    parse: catParse("dessert"),
+    hint: () => "Yes, please. I'd like the sticky toffee pudding. / No, thank you. I'm full.",
+    next: () => "dessertFollow",
+  },
+  dessertFollow: followStep("dessert", "bill"),
+  bill: {
+    waiter: s => s.dessert && s.dessert !== "none"
+      ? [`*You enjoy your ${item(s.dessert).name}.`, "Can I get you anything else? A coffee, perhaps?"]
+      : "Of course. Can I get you anything else? A coffee, perhaps?",
+    de: () => "Kann ich Ihnen noch etwas bringen? Vielleicht einen Kaffee?",
+    choices: () => shuffle([
+      { t: "No, thank you. Could we have the bill, please?", good: true },
+      { t: "Money now. I go.", good: false, fb: "Not correct English and not polite. Say: <b>Could we have the bill, please?</b>" },
+      { t: "Could I have the menu, please?", good: false, fb: "You want to pay – so you need the <b>bill</b> (Rechnung), not the menu." },
+    ]),
+    parse: (s, t) => {
+      if (has(t, ["bill", "check", "pay", "how much"])) return { ok: true };
+      if (isNo(t)) return { ok: false, reply: "All right. Just let me know when you're ready.", fb: "Now ask for the bill: <b>Could we have the bill, please?</b>" };
+      if (has(t, ["coffee", "tea"])) return { ok: false, reply: "I'm afraid the coffee machine is broken. Sorry! Anything else?", fb: "Bad luck! Now ask for the bill." };
+      return null;
+    },
+    hint: () => "No, thank you. Could we have the bill, please?",
+    next: () => "pay",
+  },
+  pay: {
+    waiter: s => `Of course. Here's your bill. That's ${money(total(S))} altogether. How would you like to pay?`,
+    de: s => `Hier ist Ihre Rechnung. Das macht ${money(total(S))}. Wie möchten Sie bezahlen?`,
+    choices: () => shuffle([
+      { t: "By card, please.", good: true, apply: s => { s.pay = "card"; } },
+      { t: "In cash, please. Here you are.", good: true, apply: s => { s.pay = "cash"; } },
+      { t: "With money.", good: false, fb: "Hmm, of course with money 😉. Say <b>By card, please.</b> or <b>In cash.</b>" },
+    ]),
+    parse: (s, t) => {
+      if (has(t, ["card", "credit", "debit", "contactless", "apple pay", "phone"])) return { ok: true, apply: s => { s.pay = "card"; } };
+      if (has(t, ["cash", "money", "note", "pound"])) return { ok: true, apply: s => { s.pay = "cash"; } };
+      return null;
+    },
+    hint: () => "By card, please. / In cash, please.",
+    next: () => "tip",
+  },
+  tip: {
+    waiter: s => s.pay === "card"
+      ? ["*The waiter brings the card machine.", "Would you like to add a tip?"]
+      : [`*You give the waiter £${note(s)}.`, "Thank you. Would you like some change?"],
+    de: s => s.pay === "card" ? "Möchten Sie Trinkgeld geben?" : "Möchten Sie Wechselgeld?",
+    choices: s => s.pay === "card" ? shuffle([
+      { t: "Yes, please add ten per cent.", good: true, apply: s => { s.tip = Math.round(subtotal(s) * 10) / 100; } },
+      { t: "No, thank you. That's fine.", good: true },
+      { t: "Tip? What tip?", good: false, fb: "In the UK people usually give a 10–12.5% tip in restaurants (if there's no service charge). Say <b>Yes, please add ten per cent.</b> or <b>No, thank you.</b>" },
+    ]) : shuffle([
+      { t: `Could I have ${money(Math.floor(note(s) - subtotal(s)))} back, please? The rest is for you.`, good: true, apply: s => { s.tip = Math.round((note(s) - Math.floor(note(s) - subtotal(s)) - subtotal(s)) * 100) / 100; } },
+      { t: "Keep the change. Thank you.", good: true, apply: s => { s.tip = Math.round((note(s) - subtotal(s)) * 100) / 100; } },
+      { t: "Give me change.", good: false, fb: "Not polite. Better: <b>Could I have … back, please?</b>" },
+    ]),
+    parse: (s, t) => {
+      const pm = t.match(/(\d+)\s*(?:per ?cent|%)/) || t.match(/(ten|five|fifteen|twelve)\s*per ?cent/);
+      const words = { five: 5, ten: 10, twelve: 12.5, fifteen: 15 };
+      if (pm) { const p = words[pm[1]] || +pm[1]; return { ok: true, apply: s => { s.tip = Math.round(subtotal(s) * p) / 100; } }; }
+      if (has(t, ["keep the change", "keep it", "rest is for you", "for you"])) return { ok: true, apply: s => { s.tip = s.pay === "cash" ? Math.round((note(s) - subtotal(s)) * 100) / 100 : Math.round(subtotal(s) * 10) / 100; } };
+      if (s.pay === "card" && isYes(t)) return { ok: true, apply: s => { s.tip = Math.round(subtotal(s) * 10) / 100; } };
+      if (isNo(t) || isYes(t) || has(t, ["change", "back"])) return { ok: true };
+      return null;
+    },
+    hint: s => s.pay === "card" ? "Yes, please add ten per cent. / No, thank you." : "Keep the change. / Could I have five pounds back, please?",
+    next: () => "bye",
+  },
+  bye: {
+    waiter: () => "Thank you very much! I hope you enjoyed your evening. Have a lovely weekend!",
+    de: () => "Vielen Dank! Ich hoffe, Sie hatten einen schönen Abend. Schönes Wochenende!",
+    choices: () => shuffle([
+      { t: "Thank you, you too! Goodbye.", good: true },
+      { t: "Thanks, it was lovely. Bye!", good: true },
+      { t: "Same to you. Good night!", good: true },
+      { t: "OK.", good: false, fb: "Say goodbye in a friendly way: <b>Thank you, you too! Goodbye.</b>" },
+    ]),
+    parse: (s, t) => has(t, ["bye", "thank", "thanks", "you too", "same to you", "good night", "goodnight", "see you", "cheers", "lovely"]) ? { ok: true } : null,
+    hint: () => "Thank you, you too! Goodbye.",
+    next: () => "END",
+  },
+};
+const STEP_ORDER = Object.keys(STEPS);
+
+function subtotal(s) {
+  return ["drink", "starter", "main", "dessert"].reduce((sum, c) => sum + (s[c] && s[c] !== "none" ? item(s[c]).price : 0), 0);
+}
+const total = s => subtotal(s);
+// round amount the guest hands over in cash (keeps "keep the change" realistic)
+const note = s => { const t = subtotal(s); const n = Math.ceil(t / 5) * 5; return n - t < 1 ? n + 5 : n; };
+
+// ---------------------------------------------------------------- Speech
+let voices = [];
+function loadVoices() { try { voices = speechSynthesis.getVoices(); } catch { voices = []; } }
+if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+function speak(text) {
+  if (!voiceOn || !("speechSynthesis" in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-GB"; u.rate = level === "A2" ? 0.85 : 0.95;
+    const v = voices.find(v => v.lang === "en-GB") || voices.find(v => v.lang.startsWith("en"));
+    if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  } catch {}
+}
+const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+// ---------------------------------------------------------------- Chat UI
+let lastWaiter = "";
+function addMsg(kind, html, de) {
+  const d = document.createElement("div");
+  d.className = "msg " + kind;
+  if (kind === "waiter") {
+    d.innerHTML = `<span class="who">Waiter <button class="speak" title="Listen" aria-label="Listen">🔊</button></span>${esc(html)}${de ? `<span class="de">${esc(de)}</span>` : ""}`;
+    d.querySelector(".speak").onclick = () => speak(html);
+  } else if (kind === "guest") {
+    d.innerHTML = `<span class="who">You</span>${esc(html)}`;
+  } else {
+    d.innerHTML = html;
+  }
+  $("#msgs").appendChild(d);
+  $("#msgs").scrollTop = $("#msgs").scrollHeight;
+  return d;
+}
+const fb = (cls, html) => addMsg("fb " + cls, html);
+
+function waiterSay(lines, de) {
+  lines = [].concat(lines);
+  const spoken = [];
+  lines.forEach((l, i) => {
+    if (l.startsWith("*")) {
+      addMsg("narr", esc(l.slice(1)));
+    } else {
+      addMsg("waiter", l, i === lines.length - 1 ? de : null);
+      spoken.push(l);
+    }
+  });
+  lastWaiter = spoken.join(" ");
+  speak(lastWaiter);
+}
+
+function goto(id) {
+  if (id === "END") return finish();
+  const st = STEPS[id];
+  if (st.skip && st.skip(S)) return goto(st.next(S));
+  cur = st; curId = id; tries = 0;
+  const lines = st.waiter(S);
+  waiterSay(lines, st.de ? st.de(S) : null);
+  S.max += 2;
+  updateSide();
+  renderAnswer();
+}
+
+function renderAnswer() {
+  const box = $("#answer");
+  box.innerHTML = "";
+  const showChoices = level === "A2" || tries >= 2;
+  if (level === "B1") {
+    const f = document.createElement("form");
+    f.className = "free";
+    f.innerHTML = `<input type="text" id="freeInput" placeholder="Write your answer in English …" autocomplete="off" aria-label="Your answer">
+      ${Rec ? '<button type="button" class="btn" id="micBtn" title="Speak">🎤</button>' : ""}
+      <button class="btn primary" type="submit">Send</button>`;
+    f.onsubmit = e => { e.preventDefault(); const v = $("#freeInput").value.trim(); if (v) onFree(v); };
+    box.appendChild(f);
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML = `<button type="button" class="btn small" id="hintBtn">💡 Hint</button>`;
+    box.appendChild(row);
+    $("#hintBtn").onclick = () => {
+      if (box.querySelector(".hintbox")) return;
+      const h = document.createElement("div"); h.className = "hintbox";
+      h.innerHTML = "💡 For example: <i>" + esc(cur.hint(S)) + "</i>";
+      box.appendChild(h);
+    };
+    if (Rec) $("#micBtn").onclick = listen;
+    setTimeout(() => { const i = $("#freeInput"); if (i && !matchMedia("(pointer: coarse)").matches) i.focus(); }, 50);
+  }
+  if (showChoices) {
+    if (level === "B1") { const p = document.createElement("div"); p.className = "muted"; p.style.fontSize = "14px"; p.textContent = "Need help? Choose an answer:"; box.appendChild(p); }
+    const c = document.createElement("div");
+    c.className = "choices";
+    cur._choices = cur._choices && cur._choicesFor === curId ? cur._choices : cur.choices(S);
+    cur._choicesFor = curId;
+    cur._choices.forEach(ch => {
+      const b = document.createElement("button");
+      b.className = "btn"; b.type = "button"; b.textContent = ch.t;
+      b.onclick = () => { if (!ch.good && !ch.repeat && !busy) b.disabled = true; onChoice(ch); };
+      c.appendChild(b);
+    });
+    box.appendChild(c);
+  }
+}
+
+function award(good, extra) {
+  const pts = good ? (tries === 0 ? 2 : 1) : 0;
+  S.score += pts;
+  return pts;
+}
+
+function advance(applyFn, reply) {
+  busy = true;
+  if (applyFn) applyFn(S);
+  cur._choices = null;
+  updateSide();
+  $("#answer").innerHTML = "";
+  setTimeout(() => {
+    if (reply) addMsg("waiter", reply), speak(reply);
+    setTimeout(() => { busy = false; goto(cur.next(S)); }, reply ? 1800 : 500);
+  }, 400);
+}
+
+function onChoice(ch) {
+  if (busy) return;
+  addMsg("guest", ch.t);
+  if (ch.repeat) {
+    fb("info", "👍 Good strategy! It's always OK to ask the waiter to repeat.");
+    const r = "Of course. " + lastWaiter.replace(/^Of course\. /, "");
+    addMsg("waiter", r); speak(r);
+    return;
+  }
+  if (ch.good) {
+    const pts = award(true);
+    fb("good", (ch.fb ? "✔ " + ch.fb : "✔ " + pick(["Well done!", "Great!", "Perfect!", "Very good!", "Nice and polite!"])) + ` <span class="muted">(+${pts})</span>`);
+    S.log.push({ step: curId, q: lastWaiter, a: ch.t, good: true, fb: ch.fb || "" });
+    advance(ch.apply);
+  } else {
+    tries++;
+    fb("bad", "✘ " + ch.fb + " <b>Try again.</b>");
+    S.log.push({ step: curId, q: lastWaiter, a: ch.t, good: false, fb: ch.fb });
+  }
+  updateSide();
+}
+
+function onFree(text) {
+  if (busy) return;
+  addMsg("guest", text);
+  const t = norm(text);
+  const r = cur.parse(S, t);
+  if (r && r.ok) {
+    const p = politeness(t);
+    let pts = award(true);
+    if (p.rude && pts === 2) { S.score -= 1; pts = 1; }
+    let bonus = "";
+    if (p.rude) bonus = " But be careful – <b>I want / Give me</b> sounds rude. Better: <b>I'd like …</b> / <b>Could I have …?</b>";
+    else if (!p.polite && text.split(/\s+/).length > 0) bonus = " Tip: add <b>please</b> or <b>thank you</b> to sound more polite.";
+    else bonus = " " + pick(["Nice and polite!", "Very good!", "Great English!", "Perfect!"]);
+    if (r.fb) bonus = " " + r.fb;
+    fb(p.rude ? "info" : "good", `✔ Understood.${bonus} <span class="muted">(+${pts})</span>`);
+    S.log.push({ step: curId, q: lastWaiter, a: text, good: true, fb: p.rude ? "Too direct – use I'd like / Could I have." : (!p.polite ? "Add please / thank you." : "") });
+    advance(r.apply, r.reply);
+    return;
+  }
+  if (r && r.reply) {
+    addMsg("waiter", r.reply); speak(r.reply);
+    if (r.fb) fb("info", "💬 " + r.fb);
+    return;
+  }
+  if (wantsRepeat(t)) {
+    fb("info", "👍 Good strategy! It's always OK to ask the waiter to repeat.");
+    const rep = "Of course. " + lastWaiter.replace(/^Of course\. /, "");
+    addMsg("waiter", rep); speak(rep);
+    return;
+  }
+  tries++;
+  S.log.push({ step: curId, q: lastWaiter, a: text, good: false, fb: r && r.fb ? r.fb.replace(/<[^>]+>/g, "") : "Answer not understood." });
+  if (!(r && r.fb)) {
+    const sorry = pick(["Sorry, I didn't quite catch that.", "I'm sorry, I don't understand.", "Sorry?"]);
+    addMsg("waiter", sorry); speak(sorry);
+  }
+  fb("bad", r && r.fb ? "✘ " + r.fb : `✘ The waiter didn't understand. Answer the question: <i>${esc(lastWaiter.split(/(?<=[.!?])\s/).filter(x => x.includes("?")).pop() || lastWaiter)}</i>` +
+    (tries >= 2 ? "<br>Look at the answers below for help." : `<br>💡 Example: <i>${esc(cur.hint(S))}</i>`));
+  renderAnswer();
+}
+
+function listen() {
+  const btn = $("#micBtn");
+  try {
+    const rec = new Rec();
+    rec.lang = "en-GB"; rec.interimResults = false; rec.maxAlternatives = 1;
+    btn.textContent = "⏺"; btn.disabled = true;
+    rec.onresult = e => { const txt = e.results[0][0].transcript; $("#freeInput").value = txt; };
+    rec.onerror = () => fb("info", "🎤 Speech recognition didn't work. Please type your answer.");
+    rec.onend = () => { btn.textContent = "🎤"; btn.disabled = false; const v = $("#freeInput").value.trim(); if (v) onFree(v); };
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    rec.start();
+  } catch { fb("info", "🎤 Speech recognition is not available. Please type your answer."); }
+}
+
+// ---------------------------------------------------------------- Side panels
+function renderMenu(activeCat) {
+  const html = [`<h2>The Red Lion</h2><div class="sub">Traditional British food since 1872</div>`];
+  for (const [cat, c] of Object.entries(MENU)) {
+    html.push(`<div class="menu-cat ${cat === activeCat ? "active" : ""}" data-cat="${cat}"><h4>${c.title}</h4>`);
+    for (const it of c.items) {
+      html.push(`<div class="menu-item ${cat === activeCat && level === "B1" ? "clickable" : ""}" data-id="${it.id}" title="${esc(it.desc)}"><span>${esc(it.label)}<span class="d">${esc(it.desc)}</span></span><span>${money(it.price)}</span></div>`);
+    }
+    html.push(`</div>`);
+  }
+  html.push(`<p class="muted" style="font-size:12px;margin-top:8px;font-family:system-ui">(v) = vegetarian${level === "B1" ? " · Click a dish to put its name into your answer." : ""}</p>`);
+  $("#menuCard").innerHTML = html.join("");
+  $("#menuCard").querySelectorAll(".menu-item.clickable").forEach(el => el.onclick = () => {
+    const i = $("#freeInput"); if (!i) return;
+    const it = item(el.dataset.id);
+    i.value = i.value ? i.value.replace(/\s*$/, " ") + it.name : (MENU.drink.items.includes(it) ? `Could I have ${article(it.name)} ${it.name}, please?` : `I'd like the ${it.name}, please.`);
+    i.focus();
+  });
+}
+
+function updateSide() {
+  renderMenu(cur && cur.cat && !cur.skip ? cur.cat : null);
+  const lines = [];
+  const add = (cat, opt) => { if (S[cat] && S[cat] !== "none") { const it = item(S[cat]); lines.push(`<li>${esc(it.label)}${S[opt] ? ` <span class="muted">(${esc(S[opt])})</span>` : ""} – ${money(it.price)}</li>`); } };
+  add("drink", "drinkOpt"); add("starter"); add("main", "mainOpt"); add("dessert", "dessertOpt");
+  if (S.allergy && S.allergy !== "none") lines.push(`<li class="muted">Note for the chef: ${esc(S.allergy)}</li>`);
+  $("#orderList").innerHTML = lines.length ? lines.join("") + `<li style="list-style:none;margin-top:4px"><b>Total: ${money(subtotal(S))}</b></li>` : `<li class="muted">Nothing yet</li>`;
+  const idx = Math.max(0, STEP_ORDER.indexOf(curId));
+  $("#prog").style.width = (idx / STEP_ORDER.length * 100) + "%";
+  $("#scoreLine").textContent = `Points: ${S.score || 0} · Level ${level}`;
+}
+
+// ---------------------------------------------------------------- Flow
+function startSim() {
+  level = document.querySelector('input[name="level"]:checked').value;
+  voiceOn = $("#optVoice").checked;
+  store.set("rest-name", $("#guestName").value);
+  store.set("rest-level", level);
+  $("#chatCard").classList.toggle("hide-de", !$("#optGerman").checked);
+  $("#voiceBtn").textContent = voiceOn ? "🔊" : "🔇";
+  resetState();
+  $("#msgs").innerHTML = "";
+  showTab("sim");
+  cur = null; curId = null; busy = false;
+  goto("welcome");
+}
+
+function finish() {
+  $("#prog").style.width = "100%";
+  const pct = S.max ? S.score / S.max : 0;
+  const stars = pct >= .9 ? 5 : pct >= .75 ? 4 : pct >= .6 ? 3 : pct >= .4 ? 2 : 1;
+  $("#stars").textContent = "★".repeat(stars) + "☆".repeat(5 - stars);
+  const verdict = ["Keep practising – you can do it!", "Not bad – try again and be more polite.", "Good job!", "Very good – the waiter was happy!", "Excellent! You could live in London!"][stars - 1];
+  $("#resultText").innerHTML = `You got <b>${S.score} of ${S.max}</b> points at level <b>${level}</b>. ${verdict}`;
+  $("#switchBtn").textContent = level === "A2" ? "Try level B1 (write your own answers)" : "Try level A2";
+  $("#review").innerHTML = S.log.map(l => `<li><span class="tag ${l.good ? "good" : "bad"}">${l.good ? "✔" : "✘"}</span> <i>${esc(l.a)}</i>${l.fb ? `<br><span class="muted" style="font-size:14px">${l.fb}</span>` : ""}</li>`).join("");
+  const rows = [];
+  for (const cat of ["drink", "starter", "main", "dessert"]) if (S[cat] && S[cat] !== "none") rows.push([item(S[cat]).label, item(S[cat]).price]);
+  const sub = subtotal(S);
+  const d = new Date();
+  $("#receipt").innerHTML = `<div style="text-align:center"><b>THE RED LION</b><br>12 King's Road, London<br>${d.toLocaleDateString("en-GB")} · Table 7<br>Guest: ${esc(S.name)}<br>------------------------------</div>` +
+    rows.map(r => `<div class="r"><span>1 x ${esc(r[0])}</span><span>${money(r[1])}</span></div>`).join("") +
+    `<div>------------------------------</div><div class="r"><b>TOTAL</b><b>${money(sub)}</b></div>` +
+    (S.tip ? `<div class="r"><span>Tip</span><span>${money(S.tip)}</span></div><div class="r"><b>PAID</b><b>${money(sub + S.tip)}</b></div>` : "") +
+    `<div class="r"><span>Paid by</span><span>${S.pay === "cash" ? "cash" : "card"}</span></div><div style="text-align:center;margin-top:8px">Thank you for your visit!<br>See you again soon.</div>`;
+  setTimeout(() => showTab("result"), 1500);
+}
+
+// ---------------------------------------------------------------- Static tabs
+function showTab(name) {
+  document.querySelectorAll("main > section").forEach(s => s.hidden = s.id !== "tab-" + name);
+  document.querySelectorAll("nav button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name || (name === "result" && b.dataset.tab === "sim")));
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  if (b.dataset.tab === "sim" && !curId) return startSim();
+  showTab(b.dataset.tab);
+});
+document.querySelectorAll("[data-goto]").forEach(a => a.onclick = e => { e.preventDefault(); showTab(a.dataset.goto); });
+
+function buildVocab() {
+  const parts = [];
+  for (const c of Object.values(MENU)) {
+    parts.push(`<h3>${c.title}</h3><div class="vocab">`);
+    for (const it of c.items) parts.push(`<button class="flip" type="button"><b>${esc(it.label)}</b><div class="front-hint muted" style="font-size:13px">What is it? 🤔</div><div class="back"><div style="font-size:14px">${esc(it.desc)}</div><div class="de">${esc(it.de)}</div></div></button>`);
+    parts.push(`</div>`);
+  }
+  $("#vocabGrid").innerHTML = parts.join("");
+  $("#vocabGrid").querySelectorAll(".flip").forEach(f => f.onclick = () => { f.classList.toggle("open"); if (f.classList.contains("open")) speak(f.querySelector("b").textContent.replace(" (v)", "")); });
+  $("#openAll").onclick = () => $("#vocabGrid").querySelectorAll(".flip").forEach(f => f.classList.add("open"));
+  $("#closeAll").onclick = () => $("#vocabGrid").querySelectorAll(".flip").forEach(f => f.classList.remove("open"));
+  $("#wordTable").innerHTML = "<tr><th>English</th><th>Deutsch</th></tr>" + WORDS.map(w => `<tr><td>${esc(w[0])}</td><td>${esc(w[1])}</td></tr>`).join("");
+  $("#phraseTable").innerHTML = "<tr><th>Who?</th><th>English</th><th>Deutsch</th></tr>" + PHRASES.map(p => `<tr><td>${p[0] === "Guest" ? "🙋 Guest" : "🤵 Waiter"}</td><td><button class="speak" aria-label="Listen" data-say="${esc(p[1])}">🔊</button> ${esc(p[1])}</td><td class="de">${esc(p[2])}</td></tr>`).join("");
+  $("#phraseTable").querySelectorAll("[data-say]").forEach(b => b.onclick = () => speak(b.dataset.say));
+}
+
+function buildQuiz() {
+  let right = 0, done = 0;
+  $("#quiz").innerHTML = "";
+  $("#quizScore").textContent = "";
+  shuffle(QUIZ).forEach(([q, a]) => {
+    const row = document.createElement("div");
+    row.className = "quiz-item";
+    row.innerHTML = `<span>“${esc(q)}”</span><span class="row"><button class="btn small">🙋 Guest</button><button class="btn small">🤵 Waiter</button></span>`;
+    row.querySelectorAll("button").forEach((b, i) => b.onclick = () => {
+      const ok = (i === 0 ? "Guest" : "Waiter") === a;
+      row.classList.add(ok ? "ok" : "no");
+      row.querySelectorAll("button").forEach(x => x.disabled = true);
+      b.textContent = (ok ? "✔ " : "✘ ") + b.textContent;
+      done++; if (ok) right++;
+      if (done === QUIZ.length) $("#quizScore").textContent = `You got ${right} of ${QUIZ.length} right. ${right >= 8 ? "Great – you're ready for the role play!" : "Look at the phrases again."}`;
+    });
+    $("#quiz").appendChild(row);
+  });
+}
+
+// ---------------------------------------------------------------- Init
+$("#startBtn").onclick = startSim;
+$("#againBtn").onclick = startSim;
+$("#switchBtn").onclick = () => { document.querySelector(`input[name="level"][value="${level === "A2" ? "B1" : "A2"}"]`).checked = true; startSim(); };
+$("#restartBtn").onclick = () => { if (confirm("Start the role play again?")) startSim(); };
+$("#repeatBtn").onclick = () => speak(lastWaiter);
+$("#deBtn").onclick = () => { $("#chatCard").classList.toggle("hide-de"); $("#optGerman").checked = !$("#chatCard").classList.contains("hide-de"); };
+$("#voiceBtn").onclick = () => { voiceOn = !voiceOn; $("#voiceBtn").textContent = voiceOn ? "🔊" : "🔇"; $("#optVoice").checked = voiceOn; if (!voiceOn) try { speechSynthesis.cancel(); } catch {} };
+$("#quizReset").onclick = buildQuiz;
+$("#guestName").value = store.get("rest-name") || "";
+const savedLevel = store.get("rest-level");
+if (savedLevel) { const r = document.querySelector(`input[name="level"][value="${savedLevel}"]`); if (r) r.checked = true; }
+resetState();
+buildVocab();
+buildQuiz();
+renderMenu(null);
+</script>
+</body>
+</html>
